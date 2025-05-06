@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Kafa Bounce Realistic</title>
+  <title>Kafa Bounce Smooth</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     html, body {
@@ -58,30 +58,6 @@
     kafaImg.src = 'kafa.png'; // senin kafa görselin
 
     const kafalar = [];
-    const efekts = [];
-
-    function efektPatlat(x, y) {
-      efekts.push({ x, y, r: 0, a: 1 });
-    }
-
-    function updateEfekts() {
-      for (let i = efekts.length - 1; i >= 0; i--) {
-        const e = efekts[i];
-        e.r += 2;
-        e.a -= 0.05;
-        if (e.a <= 0) efekts.splice(i, 1);
-      }
-    }
-
-    function drawEfekts() {
-      for (const e of efekts) {
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255,255,255,${e.a})`;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-    }
 
     function Kafa() {
       this.x = Math.random() * width;
@@ -89,25 +65,24 @@
       this.vx = (Math.random() - 0.5) * 10;
       this.vy = Math.random() * 10 - 5;
       this.size = 80 + Math.random() * 40;
+      this.rotation = 0;
+      this.rotationSpeed = 0;
       this.dragging = false;
       this.offsetX = 0;
       this.offsetY = 0;
-      this.rotation = 0;
-      this.rotationSpeed = 0;
     }
 
     Kafa.prototype.update = function () {
       if (!this.dragging) {
         this.x += this.vx;
         this.y += this.vy;
-        this.vy += 0.3;
+        this.vy += 0.5; // yerçekimi
 
+        // sürtünme
         this.vx *= 0.985;
         this.vy *= 0.985;
 
-        this.rotation += this.rotationSpeed;
-        this.rotationSpeed *= 0.98;
-
+        // zemine çarpma
         if (this.y + this.size > height) {
           this.y = height - this.size;
 
@@ -116,23 +91,22 @@
             this.vx *= 0.95;
             if (Math.abs(this.vx) < 0.2) this.vx = 0;
           } else {
-            this.vy *= -0.55;
-            this.rotationSpeed = this.vx * 0.1;
-            efektPatlat(this.x + this.size / 2, this.y + this.size);
+            this.vy *= -0.55; // sekme azaltıldı
+            this.rotationSpeed = this.vx * 0.03; // sekme sonrası dönme hızı
           }
         }
 
+        // kenarlara çarpma
         if (this.x < 0) {
           this.x = 0;
           this.vx *= -0.8;
-          this.rotationSpeed = this.vy * 0.1;
-          efektPatlat(this.x, this.y + this.size / 2);
         } else if (this.x + this.size > width) {
           this.x = width - this.size;
           this.vx *= -0.8;
-          this.rotationSpeed = this.vy * 0.1;
-          efektPatlat(this.x + this.size, this.y + this.size / 2);
         }
+
+        // dönüş hareketi
+        this.rotation += this.rotationSpeed;
       }
     };
 
@@ -188,9 +162,10 @@
         draggingKafa.x = pos.x - draggingKafa.offsetX;
         draggingKafa.y = pos.y - draggingKafa.offsetY;
 
+        // daha yumuşak fırlatma
         draggingKafa.vx = dx * 0.5;
         draggingKafa.vy = dy * 0.5;
-        draggingKafa.rotationSpeed = dx * 0.01;
+        draggingKafa.rotationSpeed = dx * 0.005;
 
         lastMouse = pos;
       }
@@ -240,11 +215,9 @@
             b.vx += bounce * p * nx;
             b.vy += bounce * p * ny;
 
-            // Çarpışmadan kaynaklı dönüş efektleri
-            a.rotationSpeed += (b.vx - a.vx) * 0.01;
-            b.rotationSpeed += (a.vx - b.vx) * 0.01;
-
-            efektPatlat((a.x + b.x) / 2 + a.size / 2, (a.y + b.y) / 2 + a.size / 2);
+            // Çarpışma sonrası dönme eklemesi
+            a.rotationSpeed += (b.vx - a.vx) * 0.003;
+            b.rotationSpeed += (a.vx - b.vx) * 0.003;
           }
         }
       }
@@ -253,8 +226,6 @@
     function animate() {
       ctx.clearRect(0, 0, width, height);
       handleCollisions();
-      updateEfekts();
-      drawEfekts();
       kafalar.forEach(k => {
         k.update();
         k.draw();
@@ -263,7 +234,7 @@
     }
 
     kafaImg.onload = function () {
-      addKafa();
+      addKafa(); // sadece 1 kafa
       animate();
     };
   </script>
