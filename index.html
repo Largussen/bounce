@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Kafa Bounce</title>
   <style>
     html, body {
@@ -10,7 +10,6 @@
       overflow: hidden;
       background: #222;
     }
-
     canvas {
       display: block;
     }
@@ -18,7 +17,6 @@
 </head>
 <body>
   <canvas id="canvas"></canvas>
-
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
@@ -32,7 +30,7 @@
     resize();
 
     const kafaImg = new Image();
-    kafaImg.src = 'kafa.png'; // görselin dosya adı burada
+    kafaImg.src = 'kafa.png';
 
     const kafalar = [];
 
@@ -42,24 +40,27 @@
       this.vx = (Math.random() - 0.5) * 10;
       this.vy = Math.random() * 10 - 5;
       this.size = 80 + Math.random() * 40;
+      this.dragging = false;
+      this.offsetX = 0;
+      this.offsetY = 0;
     }
 
     Kafa.prototype.update = function () {
-      this.x += this.vx;
-      this.y += this.vy;
+      if (!this.dragging) {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.5; // yerçekimi
 
-      // Yerçekimi
-      this.vy += 0.5;
+        // zemin çarpması
+        if (this.y + this.size > height) {
+          this.y = height - this.size;
+          this.vy *= -0.7;
+        }
 
-      // Zemin çarpması
-      if (this.y + this.size > height) {
-        this.y = height - this.size;
-        this.vy *= -0.7;
-      }
-
-      // Kenar çarpması
-      if (this.x < 0 || this.x + this.size > width) {
-        this.vx *= -1;
+        // kenar çarpması
+        if (this.x < 0 || this.x + this.size > width) {
+          this.vx *= -1;
+        }
       }
     };
 
@@ -71,19 +72,81 @@
       kafalar.push(new Kafa());
     }
 
-    canvas.addEventListener('click', addKafa);
+    canvas.addEventListener('click', (e) => {
+      if (!draggingKafa) addKafa();
+    });
+
+    let draggingKafa = null;
+    let lastMouse = { x: 0, y: 0 };
+
+    function getMousePos(e) {
+      if (e.touches) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else {
+        return { x: e.clientX, y: e.clientY };
+      }
+    }
+
+    function handleDown(e) {
+      const pos = getMousePos(e);
+      lastMouse = pos;
+      for (let i = kafalar.length - 1; i >= 0; i--) {
+        const k = kafalar[i];
+        if (
+          pos.x > k.x && pos.x < k.x + k.size &&
+          pos.y > k.y && pos.y < k.y + k.size
+        ) {
+          draggingKafa = k;
+          k.dragging = true;
+          k.offsetX = pos.x - k.x;
+          k.offsetY = pos.y - k.y;
+          break;
+        }
+      }
+    }
+
+    function handleMove(e) {
+      if (draggingKafa) {
+        const pos = getMousePos(e);
+        const dx = pos.x - lastMouse.x;
+        const dy = pos.y - lastMouse.y;
+
+        draggingKafa.x = pos.x - draggingKafa.offsetX;
+        draggingKafa.y = pos.y - draggingKafa.offsetY;
+
+        draggingKafa.vx = dx;
+        draggingKafa.vy = dy;
+
+        lastMouse = pos;
+      }
+    }
+
+    function handleUp() {
+      if (draggingKafa) {
+        draggingKafa.dragging = false;
+        draggingKafa = null;
+      }
+    }
+
+    canvas.addEventListener('mousedown', handleDown);
+    canvas.addEventListener('mousemove', handleMove);
+    canvas.addEventListener('mouseup', handleUp);
+
+    canvas.addEventListener('touchstart', handleDown);
+    canvas.addEventListener('touchmove', handleMove);
+    canvas.addEventListener('touchend', handleUp);
 
     function animate() {
       ctx.clearRect(0, 0, width, height);
-      kafalar.forEach(kafa => {
-        kafa.update();
-        kafa.draw();
+      kafalar.forEach(k => {
+        k.update();
+        k.draw();
       });
       requestAnimationFrame(animate);
     }
 
     kafaImg.onload = function () {
-      for (let i = 0; i < 5; i++) addKafa();
+      for (let i = 0; i < 6; i++) addKafa();
       animate();
     };
   </script>
