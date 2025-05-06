@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Kafa Bounce Smooth2</title>
+  <title>Kafa Bounce Smooth</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     html, body {
@@ -55,15 +55,39 @@
     resize();
 
     const kafaImg = new Image();
-    kafaImg.src = 'kafa.png';
+    kafaImg.src = 'kafa.png'; // senin kafa görselin
 
     const kafalar = [];
+    const efekts = [];
+
+    function addEffect(x, y) {
+      efekts.push({ x, y, radius: 0, alpha: 1 });
+    }
+
+    function updateEfekts() {
+      for (let i = efekts.length - 1; i >= 0; i--) {
+        const e = efekts[i];
+        e.radius += 2;
+        e.alpha -= 0.05;
+        if (e.alpha <= 0) efekts.splice(i, 1);
+      }
+    }
+
+    function drawEfekts() {
+      efekts.forEach(e => {
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255,255,255,${e.alpha})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+    }
 
     function Kafa() {
       this.x = Math.random() * width;
       this.y = Math.random() * height / 2;
-      this.vx = 0;
-      this.vy = 0;
+      this.vx = (Math.random() - 0.5) * 10;
+      this.vy = Math.random() * 10 - 5;
       this.size = 80 + Math.random() * 40;
       this.dragging = false;
       this.offsetX = 0;
@@ -74,22 +98,21 @@
       if (!this.dragging) {
         this.x += this.vx;
         this.y += this.vy;
-        this.vy += 0.3; // yerçekimi
+        this.vy += 0.3; // yerçekimi daha hafif
 
-        // sürtünme
-        this.vx *= 0.98;
-        this.vy *= 0.98;
+        this.vx *= 0.985;
+        this.vy *= 0.985;
 
         // zemine çarpma
         if (this.y + this.size > height) {
           this.y = height - this.size;
-
           if (Math.abs(this.vy) < 1.5) {
             this.vy = 0;
             this.vx *= 0.95;
             if (Math.abs(this.vx) < 0.2) this.vx = 0;
           } else {
-            this.vy *= -0.55; // sekme azaltıldı
+            this.vy *= -0.55;
+            addEffect(this.x + this.size / 2, height - 2);
           }
         }
 
@@ -97,9 +120,11 @@
         if (this.x < 0) {
           this.x = 0;
           this.vx *= -0.8;
+          addEffect(2, this.y + this.size / 2);
         } else if (this.x + this.size > width) {
           this.x = width - this.size;
           this.vx *= -0.8;
+          addEffect(width - 2, this.y + this.size / 2);
         }
       }
     };
@@ -152,9 +177,9 @@
         draggingKafa.x = pos.x - draggingKafa.offsetX;
         draggingKafa.y = pos.y - draggingKafa.offsetY;
 
-        // daha yumuşak fırlatma
-        draggingKafa.vx = dx * 0.8; // kuvvetli hızlandırma
-        draggingKafa.vy = dy * 0.8; // kuvvetli hızlandırma
+        // fırlatma hissi için biraz daha fazla momentum
+        draggingKafa.vx = dx * 0.8;
+        draggingKafa.vy = dy * 0.8;
 
         lastMouse = pos;
       }
@@ -211,6 +236,8 @@
     function animate() {
       ctx.clearRect(0, 0, width, height);
       handleCollisions();
+      updateEfekts();
+      drawEfekts();
       kafalar.forEach(k => {
         k.update();
         k.draw();
@@ -219,7 +246,7 @@
     }
 
     kafaImg.onload = function () {
-      addKafa(); // sadece 1 kafa
+      addKafa(); // sadece 1 kafa başlangıçta
       animate();
     };
   </script>
