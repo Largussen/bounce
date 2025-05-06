@@ -1,245 +1,136 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Kafa Bounce Smooth</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: #111;
-    }
-    canvas {
-      display: block;
-      touch-action: none;
-    }
-    #addBtn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      font-size: 48px;
-      padding: 16px 22px;
-      background: white;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      z-index: 10;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    }
-  </style>
-</head>
-<body>
-  <canvas id="canvas"></canvas>
-  <button id="addBtn">+</button>
+let kafalar = [];
+let width = window.innerWidth;
+let height = window.innerHeight;
 
-  <script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    let width, height;
+document.getElementById('artı-btn').addEventListener('click', () => {
+  if (kafalar.length === 0) {
+    // Başlangıçta yalnızca bir kafa ekleyelim
+    kafalar.push(new Kafa());
+  }
+});
 
-    function resize() {
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
-      canvas.style.width = window.innerWidth + 'px';
-      canvas.style.height = window.innerHeight + 'px';
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.scale(dpr, dpr);
-      width = window.innerWidth;
-      height = window.innerHeight;
-    }
+function Kafa() {
+  this.x = Math.random() * width;
+  this.y = Math.random() * height / 2;
+  this.vx = (Math.random() - 0.5) * 10;
+  this.vy = Math.random() * 10 - 5;
+  this.size = 80 + Math.random() * 40;
+  this.angle = 0;
+  this.angleSpeed = (Math.random() - 0.5) * 0.1; // Başlangıçta hafif dönüş
+  this.dragging = false;
+  this.offsetX = 0;
+  this.offsetY = 0;
+  this.stopped = false;
+  this.hitboxRadius = this.size / 3; // Hitbox'ı küçük tutuyoruz
+}
 
-    window.addEventListener('resize', resize);
-    resize();
+Kafa.prototype.update = function () {
+  if (!this.dragging && !this.stopped) {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += 0.5; // yerçekimi
 
-    const kafaImg = new Image();
-    kafaImg.src = 'kafa.png'; // senin kafa görselin
+    this.vx *= 0.985;
+    this.vy *= 0.985;
 
-    const kafalar = [];
-
-    function Kafa() {
-      this.x = Math.random() * width;
-      this.y = Math.random() * height / 2;
-      this.vx = (Math.random() - 0.5) * 10;
-      this.vy = Math.random() * 10 - 5;
-      this.size = 80 + Math.random() * 40;
-      this.angle = 0; // Dönme açısı
-      this.angleSpeed = 0; // Başlangıçta dönmesin
-      this.dragging = false;
-      this.offsetX = 0;
-      this.offsetY = 0;
-      this.stopped = false; // Durma durumu
-    }
-
-    Kafa.prototype.update = function () {
-      if (!this.dragging && !this.stopped) {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.vy += 0.5; // yerçekimi
-
-        // Sürtünme katsayıları
-        this.vx *= 0.985;
-        this.vy *= 0.985;
-
-        // Yerle çarpma
-        if (this.y + this.size > height) {
-          this.y = height - this.size;
-
-          if (Math.abs(this.vy) < 1.5) {
-            this.vy = 0;
-            this.vx *= 0.95;
-            if (Math.abs(this.vx) < 0.2) {
-              this.vx = 0;
-              this.stopped = true; // Durmaya başla
-            }
-          } else {
-            this.vy *= -0.55; // Sekme azalacak
-          }
+    // Yere temas etme (hitbox ile)
+    if (this.y + this.size > height) {
+      this.y = height - this.size;
+      if (Math.abs(this.vy) < 1.5) {
+        this.vy = 0;
+        this.vx *= 0.95;
+        if (Math.abs(this.vx) < 0.2) {
+          this.vx = 0;
+          this.stopped = true;
         }
-
-        // Kenarlara çarpma
-        if (this.x < 0) {
-          this.x = 0;
-          this.vx *= -0.8;
-        } else if (this.x + this.size > width) {
-          this.x = width - this.size;
-          this.vx *= -0.8;
-        }
-      }
-
-      // Kafanın kendi etrafında dönmesini sağlamak
-      this.angle += this.angleSpeed;
-    };
-
-    Kafa.prototype.draw = function () {
-      ctx.save();
-      ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
-      ctx.rotate(this.angle); // Kafayı döndür
-      ctx.drawImage(kafaImg, -this.size / 2, -this.size / 2, this.size, this.size);
-      ctx.restore();
-    };
-
-    function addKafa() {
-      if (kafalar.length < 1) kafalar.push(new Kafa()); // Başlangıçta sadece 1 kafa ekleyelim
-    }
-
-    document.getElementById('addBtn').addEventListener('click', addKafa);
-
-    let draggingKafa = null;
-    let lastMouse = { x: 0, y: 0 };
-
-    function getMousePos(e) {
-      if (e.touches) {
-        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
       } else {
-        return { x: e.clientX, y: e.clientY };
+        this.vy *= -0.55;
       }
     }
 
-    function handleDown(e) {
-      const pos = getMousePos(e);
-      lastMouse = pos;
-      for (let i = kafalar.length - 1; i >= 0; i--) {
-        const k = kafalar[i];
-        if (
-          pos.x > k.x && pos.x < k.x + k.size &&
-          pos.y > k.y && pos.y < k.y + k.size
-        ) {
-          draggingKafa = k;
-          k.dragging = true;
-          k.offsetX = pos.x - k.x;
-          k.offsetY = pos.y - k.y;
-          break;
-        }
+    if (this.x < 0) {
+      this.x = 0;
+      this.vx *= -0.8;
+    } else if (this.x + this.size > width) {
+      this.x = width - this.size;
+      this.vx *= -0.8;
+    }
+  }
+
+  // Kafanın dönmesi
+  this.angle += this.angleSpeed;
+};
+
+// Çarpışma işlemi
+function handleCollisions() {
+  const bounce = 0.7;
+
+  for (let i = 0; i < kafalar.length; i++) {
+    for (let j = i + 1; j < kafalar.length; j++) {
+      const a = kafalar[i];
+      const b = kafalar[j];
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy);
+      const minDist = (a.hitboxRadius + b.hitboxRadius);
+
+      if (dist < minDist) {
+        const overlap = minDist - dist;
+        const nx = dx / dist;
+        const ny = dy / dist;
+
+        a.x -= nx * overlap / 2;
+        a.y -= ny * overlap / 2;
+        b.x += nx * overlap / 2;
+        b.y += ny * overlap / 2;
+
+        const p = 2 * (a.vx * nx + a.vy * ny - b.vx * nx - b.vy * ny) / 2;
+
+        a.vx -= bounce * p * nx;
+        a.vy -= bounce * p * ny;
+        b.vx += bounce * p * nx;
+        b.vy += bounce * p * ny;
+
+        // Dönme hızlarını güncelle
+        const angleFactor = 0.05;
+        a.angleSpeed += (p * angleFactor);
+        b.angleSpeed += (p * angleFactor);
       }
     }
+  }
+}
 
-    function handleMove(e) {
-      if (draggingKafa) {
-        const pos = getMousePos(e);
-        const dx = pos.x - lastMouse.x;
-        const dy = pos.y - lastMouse.y;
+// Animasyon ve çizim işlemleri
+function animate() {
+  ctx.clearRect(0, 0, width, height);
+  
+  handleCollisions();
 
-        draggingKafa.x = pos.x - draggingKafa.offsetX;
-        draggingKafa.y = pos.y - draggingKafa.offsetY;
+  kafalar.forEach(kafa => {
+    kafa.update();
+    ctx.save();
+    ctx.translate(kafa.x + kafa.size / 2, kafa.y + kafa.size / 2);
+    ctx.rotate(kafa.angle);
+    ctx.drawImage(kafaImage, -kafa.size / 2, -kafa.size / 2, kafa.size, kafa.size);
+    ctx.restore();
+  });
 
-        // daha yumuşak fırlatma
-        draggingKafa.vx = dx * 0.5;
-        draggingKafa.vy = dy * 0.5;
+  requestAnimationFrame(animate);
+}
 
-        lastMouse = pos;
-      }
-    }
+// Başlangıçta bir kafa ekleyelim
+kafalar.push(new Kafa());
 
-    function handleUp() {
-      if (draggingKafa) {
-        draggingKafa.dragging = false;
-        draggingKafa = null;
-      }
-    }
+let canvas = document.createElement("canvas");
+document.body.appendChild(canvas);
+let ctx = canvas.getContext("2d");
 
-    canvas.addEventListener('mousedown', handleDown);
-    canvas.addEventListener('mousemove', handleMove);
-    canvas.addEventListener('mouseup', handleUp);
+canvas.width = width;
+canvas.height = height;
 
-    canvas.addEventListener('touchstart', handleDown, { passive: false });
-    canvas.addEventListener('touchmove', handleMove, { passive: false });
-    canvas.addEventListener('touchend', handleUp);
+let kafalarImage = new Image();
+kafalarImage.src = 'kafa.png'; // Kafanın görseli
 
-    function handleCollisions() {
-      const bounce = 0.7;
-
-      for (let i = 0; i < kafalar.length; i++) {
-        for (let j = i + 1; j < kafalar.length; j++) {
-          const a = kafalar[i];
-          const b = kafalar[j];
-          const dx = b.x - a.x;
-          const dy = b.y - a.y;
-          const dist = Math.hypot(dx, dy);
-          const minDist = (a.size + b.size) / 2;
-
-          if (dist < minDist) {
-            const overlap = minDist - dist;
-            const nx = dx / dist;
-            const ny = dy / dist;
-
-            a.x -= nx * overlap / 2;
-            a.y -= ny * overlap / 2;
-            b.x += nx * overlap / 2;
-            b.y += ny * overlap / 2;
-
-            const p = 2 * (a.vx * nx + a.vy * ny - b.vx * nx - b.vy * ny) / 2;
-
-            a.vx -= bounce * p * nx;
-            a.vy -= bounce * p * ny;
-            b.vx += bounce * p * nx;
-            b.vy += bounce * p * ny;
-
-            // Çarpışma sonucu döndürme hızlarını değiştirelim
-            const angleFactor = 0.05; // Dönme hızı etki katsayısı
-            a.angleSpeed += (p * angleFactor);
-            b.angleSpeed += (p * angleFactor);
-          }
-        }
-      }
-    }
-
-    function animate() {
-      ctx.clearRect(0, 0, width, height);
-      handleCollisions();
-      kafalar.forEach(k => {
-        k.update();
-        k.draw();
-      });
-      requestAnimationFrame(animate);
-    }
-
-    kafaImg.onload = function () {
-      addKafa(); // Başlangıçta sadece 1 kafa ekleyelim
-      animate();
-    };
-  </script>
-</body>
-</html>
+kafalarImage.onload = function() {
+  animate();
+};
