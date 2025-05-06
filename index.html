@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Kafa Bounce</title>
+  <title>Kafa Bounce Realistic</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     html, body {
@@ -55,28 +55,31 @@
     resize();
 
     const kafaImg = new Image();
-    kafaImg.src = 'kafa.png'; 
+    kafaImg.src = 'kafa.png'; // senin kafa görselin
 
     const kafalar = [];
-    const efekler = [];
+    const efekts = [];
 
-    function addEfekt(x, y) {
-      efekler.push({
-        x, y, r: 0, alpha: 1
-      });
+    function efektPatlat(x, y) {
+      efekts.push({ x, y, r: 0, a: 1 });
     }
 
-    function drawEfektler() {
-      for (let i = efekler.length - 1; i >= 0; i--) {
-        const e = efekler[i];
+    function updateEfekts() {
+      for (let i = efekts.length - 1; i >= 0; i--) {
+        const e = efekts[i];
+        e.r += 2;
+        e.a -= 0.05;
+        if (e.a <= 0) efekts.splice(i, 1);
+      }
+    }
+
+    function drawEfekts() {
+      for (const e of efekts) {
         ctx.beginPath();
         ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255,255,255,${e.alpha})`;
+        ctx.strokeStyle = `rgba(255,255,255,${e.a})`;
         ctx.lineWidth = 2;
         ctx.stroke();
-        e.r += 2;
-        e.alpha -= 0.05;
-        if (e.alpha <= 0) efekler.splice(i, 1);
       }
     }
 
@@ -89,40 +92,56 @@
       this.dragging = false;
       this.offsetX = 0;
       this.offsetY = 0;
+      this.rotation = 0;
+      this.rotationSpeed = 0;
     }
 
     Kafa.prototype.update = function () {
       if (!this.dragging) {
         this.x += this.vx;
         this.y += this.vy;
-        this.vy += 0.3; 
+        this.vy += 0.3;
 
-        this.vx *= 0.988;
-        this.vy *= 0.988;
+        this.vx *= 0.985;
+        this.vy *= 0.985;
+
+        this.rotation += this.rotationSpeed;
+        this.rotationSpeed *= 0.98;
 
         if (this.y + this.size > height) {
           this.y = height - this.size;
-          if (Math.abs(this.vy) > 1.5) addEfekt(this.x + this.size / 2, height);
-          this.vy *= -0.6;
-          this.vx *= 0.95;
-          if (Math.abs(this.vy) < 0.3) this.vy = 0;
-          if (Math.abs(this.vx) < 0.1) this.vx = 0;
+
+          if (Math.abs(this.vy) < 1.5) {
+            this.vy = 0;
+            this.vx *= 0.95;
+            if (Math.abs(this.vx) < 0.2) this.vx = 0;
+          } else {
+            this.vy *= -0.55;
+            this.rotationSpeed = this.vx * 0.1;
+            efektPatlat(this.x + this.size / 2, this.y + this.size);
+          }
         }
 
         if (this.x < 0) {
           this.x = 0;
           this.vx *= -0.8;
-          addEfekt(0, this.y + this.size / 2);
+          this.rotationSpeed = this.vy * 0.1;
+          efektPatlat(this.x, this.y + this.size / 2);
         } else if (this.x + this.size > width) {
           this.x = width - this.size;
           this.vx *= -0.8;
-          addEfekt(width, this.y + this.size / 2);
+          this.rotationSpeed = this.vy * 0.1;
+          efektPatlat(this.x + this.size, this.y + this.size / 2);
         }
       }
     };
 
     Kafa.prototype.draw = function () {
-      ctx.drawImage(kafaImg, this.x, this.y, this.size, this.size);
+      ctx.save();
+      ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
+      ctx.rotate(this.rotation);
+      ctx.drawImage(kafaImg, -this.size / 2, -this.size / 2, this.size, this.size);
+      ctx.restore();
     };
 
     function addKafa() {
@@ -168,8 +187,10 @@
 
         draggingKafa.x = pos.x - draggingKafa.offsetX;
         draggingKafa.y = pos.y - draggingKafa.offsetY;
-        draggingKafa.vx = dx * 0.6;
-        draggingKafa.vy = dy * 0.6;
+
+        draggingKafa.vx = dx * 0.5;
+        draggingKafa.vy = dy * 0.5;
+        draggingKafa.rotationSpeed = dx * 0.01;
 
         lastMouse = pos;
       }
@@ -191,39 +212,39 @@
     canvas.addEventListener('touchend', handleUp);
 
     function handleCollisions() {
-      const bounce = 0.8;
+      const bounce = 0.7;
+
       for (let i = 0; i < kafalar.length; i++) {
         for (let j = i + 1; j < kafalar.length; j++) {
           const a = kafalar[i];
           const b = kafalar[j];
-          const dx = b.x + b.size / 2 - (a.x + a.size / 2);
-          const dy = b.y + b.size / 2 - (a.y + a.size / 2);
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
           const dist = Math.hypot(dx, dy);
           const minDist = (a.size + b.size) / 2;
 
           if (dist < minDist) {
+            const overlap = minDist - dist;
             const nx = dx / dist;
             const ny = dy / dist;
-            const overlap = minDist - dist;
 
             a.x -= nx * overlap / 2;
             a.y -= ny * overlap / 2;
             b.x += nx * overlap / 2;
             b.y += ny * overlap / 2;
 
-            const dvx = b.vx - a.vx;
-            const dvy = b.vy - a.vy;
-            const impactSpeed = dvx * nx + dvy * ny;
+            const p = 2 * (a.vx * nx + a.vy * ny - b.vx * nx - b.vy * ny) / 2;
 
-            if (impactSpeed > 0) continue;
+            a.vx -= bounce * p * nx;
+            a.vy -= bounce * p * ny;
+            b.vx += bounce * p * nx;
+            b.vy += bounce * p * ny;
 
-            const impulse = (2 * impactSpeed) / 2;
-            a.vx += impulse * nx * bounce;
-            a.vy += impulse * ny * bounce;
-            b.vx -= impulse * nx * bounce;
-            b.vy -= impulse * ny * bounce;
+            // Çarpışmadan kaynaklı dönüş efektleri
+            a.rotationSpeed += (b.vx - a.vx) * 0.01;
+            b.rotationSpeed += (a.vx - b.vx) * 0.01;
 
-            addEfekt(a.x + a.size / 2, a.y + a.size / 2);
+            efektPatlat((a.x + b.x) / 2 + a.size / 2, (a.y + b.y) / 2 + a.size / 2);
           }
         }
       }
@@ -231,8 +252,9 @@
 
     function animate() {
       ctx.clearRect(0, 0, width, height);
-      drawEfektler();
       handleCollisions();
+      updateEfekts();
+      drawEfekts();
       kafalar.forEach(k => {
         k.update();
         k.draw();
