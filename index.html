@@ -55,9 +55,32 @@
     resize();
 
     const kafaImg = new Image();
-    kafaImg.src = 'kafa.png'; // senin kafa görselin
+    kafaImg.src = 'kafa.png';
 
     const kafalar = [];
+    const efekts = [];
+
+    function addBounceEffect(x, y) {
+      efekts.push({ x, y, radius: 0, alpha: 1 });
+    }
+
+    function updateEfekts() {
+      for (let i = efekts.length - 1; i >= 0; i--) {
+        const e = efekts[i];
+        e.radius += 2;
+        e.alpha -= 0.05;
+        if (e.alpha <= 0) efekts.splice(i, 1);
+      }
+    }
+
+    function drawEfekts() {
+      efekts.forEach(e => {
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255,255,255,${e.alpha})`;
+        ctx.stroke();
+      });
+    }
 
     function Kafa() {
       this.x = Math.random() * width;
@@ -68,19 +91,21 @@
       this.dragging = false;
       this.offsetX = 0;
       this.offsetY = 0;
+      this.rotation = Math.random() * 2 * Math.PI;
+      this.rotationSpeed = (Math.random() - 0.5) * 0.1;
     }
 
     Kafa.prototype.update = function () {
       if (!this.dragging) {
         this.x += this.vx;
         this.y += this.vy;
-        this.vy += 0.5; // yerçekimi
+        this.vy += 0.5;
 
-        // sürtünme
         this.vx *= 0.985;
         this.vy *= 0.985;
 
-        // zemine çarpma
+        this.rotation += this.rotationSpeed;
+
         if (this.y + this.size > height) {
           this.y = height - this.size;
 
@@ -89,11 +114,12 @@
             this.vx *= 0.95;
             if (Math.abs(this.vx) < 0.2) this.vx = 0;
           } else {
-            this.vy *= -0.55; // sekme azaltıldı
+            this.vy *= -0.55;
+            this.rotationSpeed += (Math.random() - 0.5) * 0.2;
+            addBounceEffect(this.x + this.size / 2, height);
           }
         }
 
-        // kenarlara çarpma
         if (this.x < 0) {
           this.x = 0;
           this.vx *= -0.8;
@@ -105,7 +131,11 @@
     };
 
     Kafa.prototype.draw = function () {
-      ctx.drawImage(kafaImg, this.x, this.y, this.size, this.size);
+      ctx.save();
+      ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
+      ctx.rotate(this.rotation);
+      ctx.drawImage(kafaImg, -this.size / 2, -this.size / 2, this.size, this.size);
+      ctx.restore();
     };
 
     function addKafa() {
@@ -115,102 +145,77 @@
     document.getElementById('addBtn').addEventListener('click', addKafa);
 
     let draggingKafa = null;
-    let lastMouse = { x: 0, y: 0 };
+    let lastPositions = [];
 
     function getMousePos(e) {
       if (e.touches) {
-        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      } else {
-        return { x: e.clientX, y: e.clientY };
+               return { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
+      return { x: e.clientX, y: e.clientY };
     }
 
-    function handleDown(e) {
+    function startDrag(e) {
       const pos = getMousePos(e);
-      lastMouse = pos;
       for (let i = kafalar.length - 1; i >= 0; i--) {
         const k = kafalar[i];
         if (
-          pos.x > k.x && pos.x < k.x + k.size &&
-          pos.y > k.y && pos.y < k.y + k.size
+          pos.x > k.x &&
+          pos.x < k.x + k.size &&
+          pos.y > k.y &&
+          pos.y < k.y + k.size
         ) {
           draggingKafa = k;
-          k.dragging = true;
-          k.offsetX = pos.x - k.x;
-          k.offsetY = pos.y - k.y;
+          draggingKafa.dragging = true;
+          draggingKafa.offsetX = pos.x - k.x;
+          draggingKafa.offsetY = pos.y - k.y;
+          lastPositions = [{ x: pos.x, y: pos.y, time: Date.now() }];
           break;
         }
       }
     }
 
-    function handleMove(e) {
-      if (draggingKafa) {
-        const pos = getMousePos(e);
-        const dx = pos.x - lastMouse.x;
-        const dy = pos.y - lastMouse.y;
-
-        draggingKafa.x = pos.x - draggingKafa.offsetX;
-        draggingKafa.y = pos.y - draggingKafa.offsetY;
-
-        // daha yumuşak fırlatma
-        draggingKafa.vx = dx * 0.5;
-        draggingKafa.vy = dy * 0.5;
-
-        lastMouse = pos;
-      }
+    function drag(e) {
+      if (!draggingKafa) return;
+      const pos = getMousePos(e);
+      draggingKafa.x = pos.x - draggingKafa.offsetX;
+      draggingKafa.y = pos.y - draggingKafa.offsetY;
+      lastPositions.push({ x: pos.x, y: pos.y, time: Date.now() });
+      if (lastPositions.length > 5) lastPositions.shift();
     }
 
-    function handleUp() {
-      if (draggingKafa) {
-        draggingKafa.dragging = false;
-        draggingKafa = null;
-      }
-    }
+    function endDrag() {
+      if (!draggingKafa) return;
+      draggingKafa.dragging = false;
 
-    canvas.addEventListener('mousedown', handleDown);
-    canvas.addEventListener('mousemove', handleMove);
-    canvas.addEventListener('mouseup', handleUp);
-
-    canvas.addEventListener('touchstart', handleDown, { passive: false });
-    canvas.addEventListener('touchmove', handleMove, { passive: false });
-    canvas.addEventListener('touchend', handleUp);
-
-    function handleCollisions() {
-      const bounce = 0.7;
-
-      for (let i = 0; i < kafalar.length; i++) {
-        for (let j = i + 1; j < kafalar.length; j++) {
-          const a = kafalar[i];
-          const b = kafalar[j];
-          const dx = b.x - a.x;
-          const dy = b.y - a.y;
-          const dist = Math.hypot(dx, dy);
-          const minDist = (a.size + b.size) / 2;
-
-          if (dist < minDist) {
-            const overlap = minDist - dist;
-            const nx = dx / dist;
-            const ny = dy / dist;
-
-            a.x -= nx * overlap / 2;
-            a.y -= ny * overlap / 2;
-            b.x += nx * overlap / 2;
-            b.y += ny * overlap / 2;
-
-            const p = 2 * (a.vx * nx + a.vy * ny - b.vx * nx - b.vy * ny) / 2;
-
-            a.vx -= bounce * p * nx;
-            a.vy -= bounce * p * ny;
-            b.vx += bounce * p * nx;
-            b.vy += bounce * p * ny;
-          }
+      if (lastPositions.length >= 2) {
+        const first = lastPositions[0];
+        const last = lastPositions[lastPositions.length - 1];
+        const dx = last.x - first.x;
+        const dy = last.y - first.y;
+        const dt = (last.time - first.time) / 1000;
+        if (dt > 0) {
+          draggingKafa.vx = dx / dt / 20;
+          draggingKafa.vy = dy / dt / 20;
+          draggingKafa.rotationSpeed = dx / 100;
         }
       }
+
+      draggingKafa = null;
+      lastPositions = [];
     }
+
+    canvas.addEventListener('mousedown', startDrag);
+    canvas.addEventListener('mousemove', drag);
+    canvas.addEventListener('mouseup', endDrag);
+    canvas.addEventListener('mouseleave', endDrag);
+    canvas.addEventListener('touchstart', startDrag);
+    canvas.addEventListener('touchmove', drag);
+    canvas.addEventListener('touchend', endDrag);
 
     function animate() {
       ctx.clearRect(0, 0, width, height);
-      handleCollisions();
+      updateEfekts();
+      drawEfekts();
       kafalar.forEach(k => {
         k.update();
         k.draw();
@@ -218,10 +223,11 @@
       requestAnimationFrame(animate);
     }
 
-    kafaImg.onload = function () {
-      addKafa(); // sadece 1 kafa
+    kafaImg.onload = () => {
+      for (let i = 0; i < 6; i++) addKafa();
       animate();
     };
   </script>
 </body>
 </html>
+
