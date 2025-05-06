@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Kafa Bounce</title>
+  <title>Kafa Bounce Smooth</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background: #222;
+      background: #111;
     }
     canvas {
       display: block;
@@ -37,8 +37,8 @@
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-
     let width, height;
+
     function resize() {
       const dpr = window.devicePixelRatio || 1;
       canvas.width = window.innerWidth * dpr;
@@ -50,11 +50,12 @@
       width = window.innerWidth;
       height = window.innerHeight;
     }
+
     window.addEventListener('resize', resize);
     resize();
 
     const kafaImg = new Image();
-    kafaImg.src = 'kafa.png'; // kendi kafa görselin olacak
+    kafaImg.src = 'kafa.png'; // senin kafa görselin
 
     const kafalar = [];
 
@@ -73,32 +74,32 @@
       if (!this.dragging) {
         this.x += this.vx;
         this.y += this.vy;
-        this.vy += 0.5;
+        this.vy += 0.5; // yerçekimi
 
-        // Sürtünme
-        this.vx *= 0.99;
-        this.vy *= 0.99;
+        // sürtünme
+        this.vx *= 0.985;
+        this.vy *= 0.985;
 
-        // Yere çarpma
+        // zemine çarpma
         if (this.y + this.size > height) {
           this.y = height - this.size;
 
-          if (Math.abs(this.vy) < 1) {
+          if (Math.abs(this.vy) < 1.5) {
             this.vy = 0;
-            this.vx *= 0.98;
-            if (Math.abs(this.vx) < 0.1) this.vx = 0;
+            this.vx *= 0.95;
+            if (Math.abs(this.vx) < 0.2) this.vx = 0;
           } else {
-            this.vy *= -0.7;
+            this.vy *= -0.55; // sekme azaltıldı
           }
         }
 
-        // Kenarlardan sekme
+        // kenarlara çarpma
         if (this.x < 0) {
           this.x = 0;
-          this.vx *= -1;
+          this.vx *= -0.8;
         } else if (this.x + this.size > width) {
           this.x = width - this.size;
-          this.vx *= -1;
+          this.vx *= -0.8;
         }
       }
     };
@@ -108,9 +109,7 @@
     };
 
     function addKafa() {
-      if (kafalar.length < 20) {
-        kafalar.push(new Kafa());
-      }
+      if (kafalar.length < 20) kafalar.push(new Kafa());
     }
 
     document.getElementById('addBtn').addEventListener('click', addKafa);
@@ -153,8 +152,9 @@
         draggingKafa.x = pos.x - draggingKafa.offsetX;
         draggingKafa.y = pos.y - draggingKafa.offsetY;
 
-        draggingKafa.vx = dx;
-        draggingKafa.vy = dy;
+        // daha yumuşak fırlatma
+        draggingKafa.vx = dx * 0.5;
+        draggingKafa.vy = dy * 0.5;
 
         lastMouse = pos;
       }
@@ -176,6 +176,8 @@
     canvas.addEventListener('touchend', handleUp);
 
     function handleCollisions() {
+      const bounce = 0.7;
+
       for (let i = 0; i < kafalar.length; i++) {
         for (let j = i + 1; j < kafalar.length; j++) {
           const a = kafalar[i];
@@ -186,24 +188,21 @@
           const minDist = (a.size + b.size) / 2;
 
           if (dist < minDist) {
-            const angle = Math.atan2(dy, dx);
             const overlap = minDist - dist;
+            const nx = dx / dist;
+            const ny = dy / dist;
 
-            const ax = Math.cos(angle) * overlap / 2;
-            const ay = Math.sin(angle) * overlap / 2;
+            a.x -= nx * overlap / 2;
+            a.y -= ny * overlap / 2;
+            b.x += nx * overlap / 2;
+            b.y += ny * overlap / 2;
 
-            a.x -= ax;
-            a.y -= ay;
-            b.x += ax;
-            b.y += ay;
+            const p = 2 * (a.vx * nx + a.vy * ny - b.vx * nx - b.vy * ny) / 2;
 
-            // hız değişimi (basitçe yer değiştirme)
-            const tempVX = a.vx;
-            const tempVY = a.vy;
-            a.vx = b.vx;
-            a.vy = b.vy;
-            b.vx = tempVX;
-            b.vy = tempVY;
+            a.vx -= bounce * p * nx;
+            a.vy -= bounce * p * ny;
+            b.vx += bounce * p * nx;
+            b.vy += bounce * p * ny;
           }
         }
       }
