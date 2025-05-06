@@ -94,7 +94,7 @@
       this.rotation = Math.random() * 2 * Math.PI;
       this.rotationSpeed = 0;  // Başlangıçta dönmüyor
       this.bounceCount = 0;  // Sekme sayacı
-      this.maxBounces = 3;  // Maksimum sekme sayısı
+      this.maxBounces = 5;  // Maksimum sekme sayısı
     }
 
     Kafa.prototype.update = function () {
@@ -127,9 +127,13 @@
             addBounceEffect(this.x + this.size / 2, height);
           } else {
             // Maksimum sekme sayısına ulaşıldığında durma
-            this.vx = 0;
-            this.vy = 0;
-            this.rotationSpeed = 0;
+            this.vx *= 0.98;
+            this.vy *= 0.98;
+            if (Math.abs(this.vx) < 0.2 && Math.abs(this.vy) < 0.2) {
+              this.vx = 0;
+              this.vy = 0;
+              this.rotationSpeed = 0;
+            }
           }
         }
 
