@@ -65,6 +65,8 @@
       this.vx = (Math.random() - 0.5) * 10;
       this.vy = Math.random() * 10 - 5;
       this.size = 80 + Math.random() * 40;
+      this.angle = 0; // Dönme açısı
+      this.angleSpeed = (Math.random() - 0.5) * 0.05; // Dönme hızı
       this.dragging = false;
       this.offsetX = 0;
       this.offsetY = 0;
@@ -102,10 +104,17 @@
           this.vx *= -0.8;
         }
       }
+
+      // Kafanın kendi etrafında dönmesini sağlamak
+      this.angle += this.angleSpeed;
     };
 
     Kafa.prototype.draw = function () {
-      ctx.drawImage(kafaImg, this.x, this.y, this.size, this.size);
+      ctx.save();
+      ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
+      ctx.rotate(this.angle); // Kafayı döndür
+      ctx.drawImage(kafaImg, -this.size / 2, -this.size / 2, this.size, this.size);
+      ctx.restore();
     };
 
     function addKafa() {
