@@ -190,9 +190,9 @@
       }
     }
 
-    function endDrag() {
+    function endDrag(e) {
       if (draggingKafa) {
-        const mousePos = getMousePos(event);
+        const mousePos = getMousePos(e);
         const angle = Math.atan2(mousePos.y - draggingKafa.y, mousePos.x - draggingKafa.x);
         const force = Math.min(15, Math.sqrt(Math.pow(mousePos.y - draggingKafa.y, 2) + Math.pow(mousePos.x - draggingKafa.x, 2)) / 10);
         
