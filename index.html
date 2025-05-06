@@ -13,10 +13,25 @@
     canvas {
       display: block;
     }
+    #addBtn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      font-size: 32px;
+      padding: 10px 16px;
+      background: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
+  <button id="addBtn">+</button>
+
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
@@ -51,13 +66,14 @@
         this.y += this.vy;
         this.vy += 0.5; // yerçekimi
 
-        // zemin çarpması
+        this.vx *= 0.99; // sürtünme
+        this.vy *= 0.99;
+
         if (this.y + this.size > height) {
           this.y = height - this.size;
           this.vy *= -0.7;
         }
 
-        // kenar çarpması
         if (this.x < 0 || this.x + this.size > width) {
           this.vx *= -1;
         }
@@ -69,15 +85,16 @@
     };
 
     function addKafa() {
-      kafalar.push(new Kafa());
+      if (kafalar.length < 20) {
+        kafalar.push(new Kafa());
+      }
     }
 
-    canvas.addEventListener('click', (e) => {
-      if (!draggingKafa) addKafa();
-    });
+    document.getElementById('addBtn').addEventListener('click', addKafa);
 
     let draggingKafa = null;
     let lastMouse = { x: 0, y: 0 };
+    let didDrag = false;
 
     function getMousePos(e) {
       if (e.touches) {
@@ -118,6 +135,7 @@
         draggingKafa.vy = dy;
 
         lastMouse = pos;
+        didDrag = true;
       }
     }
 
@@ -126,6 +144,7 @@
         draggingKafa.dragging = false;
         draggingKafa = null;
       }
+      didDrag = false;
     }
 
     canvas.addEventListener('mousedown', handleDown);
