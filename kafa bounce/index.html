@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kafa Bounce</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #222;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const kafaImg = new Image();
+    kafaImg.src = 'kafa.png'; // görselin dosya adı burada
+
+    const kafalar = [];
+
+    function Kafa() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height / 2;
+      this.vx = (Math.random() - 0.5) * 10;
+      this.vy = Math.random() * 10 - 5;
+      this.size = 80 + Math.random() * 40;
+    }
+
+    Kafa.prototype.update = function () {
+      this.x += this.vx;
+      this.y += this.vy;
+
+      // Yerçekimi
+      this.vy += 0.5;
+
+      // Zemin çarpması
+      if (this.y + this.size > height) {
+        this.y = height - this.size;
+        this.vy *= -0.7;
+      }
+
+      // Kenar çarpması
+      if (this.x < 0 || this.x + this.size > width) {
+        this.vx *= -1;
+      }
+    };
+
+    Kafa.prototype.draw = function () {
+      ctx.drawImage(kafaImg, this.x, this.y, this.size, this.size);
+    };
+
+    function addKafa() {
+      kafalar.push(new Kafa());
+    }
+
+    canvas.addEventListener('click', addKafa);
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      kafalar.forEach(kafa => {
+        kafa.update();
+        kafa.draw();
+      });
+      requestAnimationFrame(animate);
+    }
+
+    kafaImg.onload = function () {
+      for (let i = 0; i < 5; i++) addKafa();
+      animate();
+    };
+  </script>
+</body>
+</html>
