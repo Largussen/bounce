@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Kafa Bounce Smooth2</title>
+  <title>Kafa Bounce Smooth</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     html, body {
@@ -55,89 +55,45 @@
     resize();
 
     const kafaImg = new Image();
-    kafaImg.src = 'kafa.png';
+    kafaImg.src = 'kafa.png'; // senin kafa görselin
 
     const kafalar = [];
-    const efekts = [];
-
-    function addBounceEffect(x, y) {
-      efekts.push({ x, y, radius: 0, alpha: 1 });
-    }
-
-    function updateEfekts() {
-      for (let i = efekts.length - 1; i >= 0; i--) {
-        const e = efekts[i];
-        e.radius += 2;
-        e.alpha -= 0.05;
-        if (e.alpha <= 0) efekts.splice(i, 1);
-      }
-    }
-
-    function drawEfekts() {
-      efekts.forEach(e => {
-        ctx.beginPath();
-        ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255,255,255,${e.alpha})`;
-        ctx.stroke();
-      });
-    }
 
     function Kafa() {
       this.x = Math.random() * width;
       this.y = Math.random() * height / 2;
-      this.vx = 0;
-      this.vy = 0;
+      this.vx = (Math.random() - 0.5) * 10;
+      this.vy = Math.random() * 10 - 5;
       this.size = 80 + Math.random() * 40;
       this.dragging = false;
       this.offsetX = 0;
       this.offsetY = 0;
-      this.rotation = Math.random() * 2 * Math.PI;
-      this.rotationSpeed = 0;  // Başlangıçta dönmüyor
-      this.bounceCount = 0;  // Sekme sayacı
-      this.maxBounces = 5;  // Maksimum sekme sayısı
     }
 
     Kafa.prototype.update = function () {
       if (!this.dragging) {
-        // Kafa hareket etmeye devam eder
         this.x += this.vx;
         this.y += this.vy;
+        this.vy += 0.5; // yerçekimi
 
-        // Yerçekimi etkisi
-        this.vy += 0.5;
-
-        // Hız yavaşlatma
+        // sürtünme
         this.vx *= 0.985;
         this.vy *= 0.985;
 
-        // Dönme hareketi (sadece sekme olduğunda başlar)
-        if (this.rotationSpeed !== 0) {
-          this.rotation += this.rotationSpeed;
-        }
-
-        // Yere çarpma kontrolü
+        // zemine çarpma
         if (this.y + this.size > height) {
           this.y = height - this.size;
-          if (this.bounceCount < this.maxBounces) {
-            // Yere çarptığında sekme
-            this.vy *= -0.6; // Sekme oranı
-            this.vx *= 0.9; // Yavaşça durma
-            this.bounceCount++; // Sekme sayısını artır
-            this.rotationSpeed = (Math.random() - 0.5) * 0.2; // Dönme hızı
-            addBounceEffect(this.x + this.size / 2, height);
+
+          if (Math.abs(this.vy) < 1.5) {
+            this.vy = 0;
+            this.vx *= 0.95;
+            if (Math.abs(this.vx) < 0.2) this.vx = 0;
           } else {
-            // Maksimum sekme sayısına ulaşıldığında durma
-            this.vx *= 0.98;
-            this.vy *= 0.98;
-            if (Math.abs(this.vx) < 0.2 && Math.abs(this.vy) < 0.2) {
-              this.vx = 0;
-              this.vy = 0;
-              this.rotationSpeed = 0;
-            }
+            this.vy *= -0.55; // sekme azaltıldı
           }
         }
 
-        // Yatay sınır kontrolü
+        // kenarlara çarpma
         if (this.x < 0) {
           this.x = 0;
           this.vx *= -0.8;
@@ -149,11 +105,7 @@
     };
 
     Kafa.prototype.draw = function () {
-      ctx.save();
-      ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
-      ctx.rotate(this.rotation);
-      ctx.drawImage(kafaImg, -this.size / 2, -this.size / 2, this.size, this.size);
-      ctx.restore();
+      ctx.drawImage(kafaImg, this.x, this.y, this.size, this.size);
     };
 
     function addKafa() {
@@ -163,71 +115,113 @@
     document.getElementById('addBtn').addEventListener('click', addKafa);
 
     let draggingKafa = null;
-    let lastPositions = [];
+    let lastMouse = { x: 0, y: 0 };
 
     function getMousePos(e) {
       if (e.touches) {
         return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else {
+        return { x: e.clientX, y: e.clientY };
       }
-      return { x: e.clientX, y: e.clientY };
     }
 
-    function startDrag(e) {
-      const mousePos = getMousePos(e);
-      draggingKafa = kafalar.find(kafa => {
-        return (
-          mousePos.x > kafa.x && mousePos.x < kafa.x + kafa.size &&
-          mousePos.y > kafa.y && mousePos.y < kafa.y + kafa.size
-        );
-      });
+    function handleDown(e) {
+      const pos = getMousePos(e);
+      lastMouse = pos;
+      for (let i = kafalar.length - 1; i >= 0; i--) {
+        const k = kafalar[i];
+        if (
+          pos.x > k.x && pos.x < k.x + k.size &&
+          pos.y > k.y && pos.y < k.y + k.size
+        ) {
+          draggingKafa = k;
+          k.dragging = true;
+          k.offsetX = pos.x - k.x;
+          k.offsetY = pos.y - k.y;
+          break;
+        }
+      }
+    }
+
+    function handleMove(e) {
       if (draggingKafa) {
-        draggingKafa.offsetX = mousePos.x - draggingKafa.x;
-        draggingKafa.offsetY = mousePos.y - draggingKafa.y;
+        const pos = getMousePos(e);
+        const dx = pos.x - lastMouse.x;
+        const dy = pos.y - lastMouse.y;
+
+        draggingKafa.x = pos.x - draggingKafa.offsetX;
+        draggingKafa.y = pos.y - draggingKafa.offsetY;
+
+        // daha yumuşak fırlatma
+        draggingKafa.vx = dx * 0.5;
+        draggingKafa.vy = dy * 0.5;
+
+        lastMouse = pos;
       }
     }
 
-    function drag(e) {
+    function handleUp() {
       if (draggingKafa) {
-        const mousePos = getMousePos(e);
-        draggingKafa.x = mousePos.x - draggingKafa.offsetX;
-        draggingKafa.y = mousePos.y - draggingKafa.offsetY;
+        draggingKafa.dragging = false;
+        draggingKafa = null;
       }
     }
 
-    function endDrag(e) {
-      if (draggingKafa) {
-        const mousePos = getMousePos(e);
-        const angle = Math.atan2(mousePos.y - draggingKafa.y, mousePos.x - draggingKafa.x);
-        const force = Math.min(15, Math.sqrt(Math.pow(mousePos.y - draggingKafa.y, 2) + Math.pow(mousePos.x - draggingKafa.x, 2)) / 10);
-        
-        draggingKafa.vx = force * Math.cos(angle);
-        draggingKafa.vy = force * Math.sin(angle);
-      }
-      draggingKafa = null;
-    }
+    canvas.addEventListener('mousedown', handleDown);
+    canvas.addEventListener('mousemove', handleMove);
+    canvas.addEventListener('mouseup', handleUp);
 
-    canvas.addEventListener('mousedown', startDrag);
-    canvas.addEventListener('mousemove', drag);
-    canvas.addEventListener('mouseup', endDrag);
-    canvas.addEventListener('touchstart', startDrag);
-    canvas.addEventListener('touchmove', drag);
-    canvas.addEventListener('touchend', endDrag);
+    canvas.addEventListener('touchstart', handleDown, { passive: false });
+    canvas.addEventListener('touchmove', handleMove, { passive: false });
+    canvas.addEventListener('touchend', handleUp);
+
+    function handleCollisions() {
+      const bounce = 0.7;
+
+      for (let i = 0; i < kafalar.length; i++) {
+        for (let j = i + 1; j < kafalar.length; j++) {
+          const a = kafalar[i];
+          const b = kafalar[j];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const dist = Math.hypot(dx, dy);
+          const minDist = (a.size + b.size) / 2;
+
+          if (dist < minDist) {
+            const overlap = minDist - dist;
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            a.x -= nx * overlap / 2;
+            a.y -= ny * overlap / 2;
+            b.x += nx * overlap / 2;
+            b.y += ny * overlap / 2;
+
+            const p = 2 * (a.vx * nx + a.vy * ny - b.vx * nx - b.vy * ny) / 2;
+
+            a.vx -= bounce * p * nx;
+            a.vy -= bounce * p * ny;
+            b.vx += bounce * p * nx;
+            b.vy += bounce * p * ny;
+          }
+        }
+      }
+    }
 
     function animate() {
       ctx.clearRect(0, 0, width, height);
-
-      kafalar.forEach(kafa => {
-        kafa.update();
-        kafa.draw();
+      handleCollisions();
+      kafalar.forEach(k => {
+        k.update();
+        k.draw();
       });
-
-      updateEfekts();
-      drawEfekts();
-
       requestAnimationFrame(animate);
     }
 
-    animate();
+    kafaImg.onload = function () {
+      addKafa(); // sadece 1 kafa
+      animate();
+    };
   </script>
 </body>
 </html>
