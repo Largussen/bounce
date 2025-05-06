@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Kafa Bounce SmoothRR</title>
+  <title>Kafa Bounce Smooth</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     html, body {
@@ -70,6 +70,7 @@
       this.dragging = false;
       this.offsetX = 0;
       this.offsetY = 0;
+      this.bounceEffect = false; // sekme efektini kontrol eden yeni bir özellik
     }
 
     Kafa.prototype.update = function () {
@@ -93,6 +94,7 @@
           } else {
             this.vy *= -0.55; // sekme azaltıldı
             this.rotationSpeed = this.vx * 0.01; // dönüş hızını düşürdük
+            this.bounceEffect = true; // sekme efekti başladığında true
           }
         }
 
@@ -114,6 +116,17 @@
       ctx.save();
       ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
       ctx.rotate(this.rotation);
+
+      // Eğer sekme efekti varsa, daha büyük ve transparan bir daire çiz
+      if (this.bounceEffect) {
+        ctx.beginPath();
+        ctx.arc(0, 0, this.size / 2 + 10, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        this.bounceEffect = false; // Efekti sadece bir kez gösteriyoruz
+      }
+
       ctx.drawImage(kafaImg, -this.size / 2, -this.size / 2, this.size, this.size);
       ctx.restore();
     };
@@ -218,6 +231,10 @@
             // Çarpışma sonrası dönüş hızını daha hafif yapalım
             a.rotationSpeed += (b.vx - a.vx) * 0.0005;
             b.rotationSpeed += (a.vx - b.vx) * 0.0005;
+
+            // Çarpışma sırasında sekme efekti
+            a.bounceEffect = true;
+            b.bounceEffect = true;
           }
         }
       }
