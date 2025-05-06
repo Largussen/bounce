@@ -92,7 +92,7 @@
       this.offsetX = 0;
       this.offsetY = 0;
       this.rotation = Math.random() * 2 * Math.PI;
-      this.rotationSpeed = (Math.random() - 0.5) * 0.1;
+      this.rotationSpeed = 0;  // Başlangıçta dönmüyor
     }
 
     Kafa.prototype.update = function () {
@@ -104,7 +104,10 @@
         this.vx *= 0.985;
         this.vy *= 0.985;
 
-        this.rotation += this.rotationSpeed;
+        // Dönmeyi sadece çarpma anında ekle
+        if (this.rotationSpeed !== 0) {
+          this.rotation += this.rotationSpeed;
+        }
 
         if (this.y + this.size > height) {
           this.y = height - this.size;
@@ -115,7 +118,10 @@
             if (Math.abs(this.vx) < 0.2) this.vx = 0;
           } else {
             this.vy *= -0.55;
-            this.rotationSpeed += (Math.random() - 0.5) * 0.2;
+            // Çarpma anında döndür
+            if (Math.abs(this.rotationSpeed) < 0.01) {
+              this.rotationSpeed = (Math.random() - 0.5) * 0.2;  // Çarpmanın etkisiyle dönmeye başlasın
+            }
             addBounceEffect(this.x + this.size / 2, height);
           }
         }
@@ -149,85 +155,59 @@
 
     function getMousePos(e) {
       if (e.touches) {
-               return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
       return { x: e.clientX, y: e.clientY };
     }
 
     function startDrag(e) {
-      const pos = getMousePos(e);
-      for (let i = kafalar.length - 1; i >= 0; i--) {
-        const k = kafalar[i];
-        if (
-          pos.x > k.x &&
-          pos.x < k.x + k.size &&
-          pos.y > k.y &&
-          pos.y < k.y + k.size
-        ) {
-          draggingKafa = k;
-          draggingKafa.dragging = true;
-          draggingKafa.offsetX = pos.x - k.x;
-          draggingKafa.offsetY = pos.y - k.y;
-          lastPositions = [{ x: pos.x, y: pos.y, time: Date.now() }];
-          break;
-        }
+      const mousePos = getMousePos(e);
+      draggingKafa = kafalar.find(kafa => {
+        return (
+          mousePos.x > kafa.x && mousePos.x < kafa.x + kafa.size &&
+          mousePos.y > kafa.y && mousePos.y < kafa.y + kafa.size
+        );
+      });
+      if (draggingKafa) {
+        draggingKafa.offsetX = mousePos.x - draggingKafa.x;
+        draggingKafa.offsetY = mousePos.y - draggingKafa.y;
       }
     }
 
     function drag(e) {
-      if (!draggingKafa) return;
-      const pos = getMousePos(e);
-      draggingKafa.x = pos.x - draggingKafa.offsetX;
-      draggingKafa.y = pos.y - draggingKafa.offsetY;
-      lastPositions.push({ x: pos.x, y: pos.y, time: Date.now() });
-      if (lastPositions.length > 5) lastPositions.shift();
+      if (draggingKafa) {
+        const mousePos = getMousePos(e);
+        draggingKafa.x = mousePos.x - draggingKafa.offsetX;
+        draggingKafa.y = mousePos.y - draggingKafa.offsetY;
+      }
     }
 
     function endDrag() {
-      if (!draggingKafa) return;
-      draggingKafa.dragging = false;
-
-      if (lastPositions.length >= 2) {
-        const first = lastPositions[0];
-        const last = lastPositions[lastPositions.length - 1];
-        const dx = last.x - first.x;
-        const dy = last.y - first.y;
-        const dt = (last.time - first.time) / 1000;
-        if (dt > 0) {
-          draggingKafa.vx = dx / dt / 20;
-          draggingKafa.vy = dy / dt / 20;
-          draggingKafa.rotationSpeed = dx / 100;
-        }
-      }
-
       draggingKafa = null;
-      lastPositions = [];
     }
 
     canvas.addEventListener('mousedown', startDrag);
     canvas.addEventListener('mousemove', drag);
     canvas.addEventListener('mouseup', endDrag);
-    canvas.addEventListener('mouseleave', endDrag);
     canvas.addEventListener('touchstart', startDrag);
     canvas.addEventListener('touchmove', drag);
     canvas.addEventListener('touchend', endDrag);
 
     function animate() {
       ctx.clearRect(0, 0, width, height);
+
+      kafalar.forEach(kafa => {
+        kafa.update();
+        kafa.draw();
+      });
+
       updateEfekts();
       drawEfekts();
-      kafalar.forEach(k => {
-        k.update();
-        k.draw();
-      });
+
       requestAnimationFrame(animate);
     }
 
-    kafaImg.onload = () => {
-      for (let i = 0; i < 6; i++) addKafa();
-      animate();
-    };
+    animate();
   </script>
 </body>
 </html>
-
