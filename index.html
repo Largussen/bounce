@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Kafa Bounce SmoothR</title>
+  <title>Kafa Bounce Realistic</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     html, body {
@@ -55,9 +55,30 @@
     resize();
 
     const kafaImg = new Image();
-    kafaImg.src = 'kafa.png'; // senin kafa görselin
+    kafaImg.src = 'kafa.png';
 
     const kafalar = [];
+    const effects = [];
+
+    function Effect(x, y) {
+      this.x = x;
+      this.y = y;
+      this.radius = 4;
+      this.life = 10;
+    }
+
+    Effect.prototype.update = function () {
+      this.radius += 1.5;
+      this.life -= 1;
+    };
+
+    Effect.prototype.draw = function () {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255,255,255,${this.life / 10})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    };
 
     function Kafa() {
       this.x = Math.random() * width;
@@ -65,50 +86,49 @@
       this.vx = (Math.random() - 0.5) * 10;
       this.vy = Math.random() * 10 - 5;
       this.size = 80 + Math.random() * 40;
-      this.rotation = 0;
-      this.rotationSpeed = 0;
       this.dragging = false;
       this.offsetX = 0;
       this.offsetY = 0;
-      this.bounceEffect = false; // sekme efektini kontrol eden yeni bir özellik
+      this.rotation = 0;
+      this.rotationSpeed = 0;
     }
 
     Kafa.prototype.update = function () {
       if (!this.dragging) {
         this.x += this.vx;
         this.y += this.vy;
-        this.vy += 0.5; // yerçekimi
+        this.vy += 0.3;
 
-        // sürtünme
         this.vx *= 0.985;
         this.vy *= 0.985;
 
-        // zemine çarpma
+        this.rotation += this.rotationSpeed;
+        this.rotationSpeed *= 0.98;
+
         if (this.y + this.size > height) {
           this.y = height - this.size;
-
-          if (Math.abs(this.vy) < 1.5) {
+          if (Math.abs(this.vy) > 1) {
+            this.vy *= -0.55;
+            this.rotationSpeed = this.vx * 0.05;
+            effects.push(new Effect(this.x + this.size / 2, this.y + this.size));
+          } else {
             this.vy = 0;
             this.vx *= 0.95;
             if (Math.abs(this.vx) < 0.2) this.vx = 0;
-          } else {
-            this.vy *= -0.55; // sekme azaltıldı
-            this.rotationSpeed = this.vx * 0.01; // dönüş hızını düşürdük
-            this.bounceEffect = true; // sekme efekti başladığında true
           }
         }
 
-        // kenarlara çarpma
         if (this.x < 0) {
           this.x = 0;
           this.vx *= -0.8;
+          this.rotationSpeed = this.vy * 0.05;
+          effects.push(new Effect(this.x, this.y + this.size / 2));
         } else if (this.x + this.size > width) {
           this.x = width - this.size;
           this.vx *= -0.8;
+          this.rotationSpeed = this.vy * 0.05;
+          effects.push(new Effect(this.x + this.size, this.y + this.size / 2));
         }
-
-        // dönüş hareketi
-        this.rotation += this.rotationSpeed;
       }
     };
 
@@ -116,17 +136,6 @@
       ctx.save();
       ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
       ctx.rotate(this.rotation);
-
-      // Eğer sekme efekti varsa, daha büyük ve transparan bir daire çiz
-      if (this.bounceEffect) {
-        ctx.beginPath();
-        ctx.arc(0, 0, this.size / 2 + 10, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        this.bounceEffect = false; // Efekti sadece bir kez gösteriyoruz
-      }
-
       ctx.drawImage(kafaImg, -this.size / 2, -this.size / 2, this.size, this.size);
       ctx.restore();
     };
@@ -175,10 +184,9 @@
         draggingKafa.x = pos.x - draggingKafa.offsetX;
         draggingKafa.y = pos.y - draggingKafa.offsetY;
 
-        // daha yumuşak fırlatma
         draggingKafa.vx = dx * 0.5;
         draggingKafa.vy = dy * 0.5;
-        draggingKafa.rotationSpeed = dx * 0.001; // dönüş hızını daha da düşürdük
+        draggingKafa.rotationSpeed = dx * 0.01;
 
         lastMouse = pos;
       }
@@ -194,7 +202,6 @@
     canvas.addEventListener('mousedown', handleDown);
     canvas.addEventListener('mousemove', handleMove);
     canvas.addEventListener('mouseup', handleUp);
-
     canvas.addEventListener('touchstart', handleDown, { passive: false });
     canvas.addEventListener('touchmove', handleMove, { passive: false });
     canvas.addEventListener('touchend', handleUp);
@@ -206,8 +213,8 @@
         for (let j = i + 1; j < kafalar.length; j++) {
           const a = kafalar[i];
           const b = kafalar[j];
-          const dx = b.x - a.x;
-          const dy = b.y - a.y;
+          const dx = b.x + b.size / 2 - (a.x + a.size / 2);
+          const dy = b.y + b.size / 2 - (a.y + a.size / 2);
           const dist = Math.hypot(dx, dy);
           const minDist = (a.size + b.size) / 2;
 
@@ -228,13 +235,12 @@
             b.vx += bounce * p * nx;
             b.vy += bounce * p * ny;
 
-            // Çarpışma sonrası dönüş hızını daha hafif yapalım
-            a.rotationSpeed += (b.vx - a.vx) * 0.0005;
-            b.rotationSpeed += (a.vx - b.vx) * 0.0005;
+            a.rotationSpeed += 0.02 * (b.vx - a.vx);
+            b.rotationSpeed += 0.02 * (a.vx - b.vx);
 
-            // Çarpışma sırasında sekme efekti
-            a.bounceEffect = true;
-            b.bounceEffect = true;
+            const contactX = (a.x + a.size / 2 + b.x + b.size / 2) / 2;
+            const contactY = (a.y + a.size / 2 + b.y + b.size / 2) / 2;
+            effects.push(new Effect(contactX, contactY));
           }
         }
       }
@@ -247,11 +253,19 @@
         k.update();
         k.draw();
       });
+
+      for (let i = effects.length - 1; i >= 0; i--) {
+        const ef = effects[i];
+        ef.update();
+        ef.draw();
+        if (ef.life <= 0) effects.splice(i, 1);
+      }
+
       requestAnimationFrame(animate);
     }
 
     kafaImg.onload = function () {
-      addKafa(); // sadece 1 kafa
+      addKafa();
       animate();
     };
   </script>
