@@ -24,45 +24,14 @@
       display: block;
       background-color: #333;
     }
-
-    .game-over {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 40px;
-      text-align: center;
-      display: none;
-    }
-
-    .game-over button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 18px;
-      background-color: #f39c12;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    .game-over button:hover {
-      background-color: #e67e22;
-    }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
-  <div class="game-over" id="gameOverScreen">
-    <div>Game Over</div>
-    <button id="restartButton">Tekrar Başla</button>
-  </div>
+<canvas id="gameCanvas"></canvas>
 
 <script>
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
-  const gameOverScreen = document.getElementById("gameOverScreen");
-  const restartButton = document.getElementById("restartButton");
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -72,12 +41,14 @@
   kafaImage.src = `kafa${seciliKafaId}.png`;
 
   let score = 0;
-  let timeLeft = 5; // Başlangıçta 5 saniye süre verilecek
+  let gameOver = false;
+
+  let timeLeft = 10;
   let countdownInterval;
 
   let kafa = {
     x: canvas.width / 2,
-    y: canvas.height - 150,
+    y: canvas.height - 120,
     radius: 40,
     vx: 0,
     vy: 0,
@@ -140,12 +111,23 @@
   function drawTime() {
     ctx.fillStyle = "#fff";
     ctx.font = "24px sans-serif";
-    ctx.fillText("Kalan Süre: " + timeLeft, canvas.width - 150, 40);
+    ctx.fillText("Süre: " + timeLeft.toFixed(0), 20, 70);
   }
 
   function drawGround() {
-    ctx.fillStyle = "#444"; 
-    ctx.fillRect(0, canvas.height - 100, canvas.width, 100); 
+    ctx.fillStyle = "#444";
+    ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+  }
+
+  function drawGameOver() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#fff";
+    ctx.font = "48px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 20);
+    ctx.font = "32px sans-serif";
+    ctx.fillText("Skor: " + score, canvas.width / 2, canvas.height / 2 + 30);
   }
 
   function calculateTrajectory(dx, dy) {
@@ -171,27 +153,13 @@
       score++;
       resetKafa();
       randomizePota();
-      resetTime(); // Süreyi sıfırla
-    }
-  }
-
-  function resetTime() {
-    clearInterval(countdownInterval);
-    timeLeft = 5 - score * 0.5; // Skor arttıkça süre azalacak
-    if (timeLeft < 2) timeLeft = 2; // Süre 2 saniyenin altına inmemeli
-    countdownInterval = setInterval(decreaseTime, 1000);
-  }
-
-  function decreaseTime() {
-    timeLeft--;
-    if (timeLeft <= 0) {
-      gameOver(); // Süre bitince Game Over
+      resetTime();
     }
   }
 
   function resetKafa() {
     kafa.x = canvas.width / 2;
-    kafa.y = canvas.height - 150;
+    kafa.y = canvas.height - 120;
     kafa.vx = 0;
     kafa.vy = 0;
   }
@@ -201,25 +169,29 @@
     pota.y = Math.random() * (canvas.height / 2) + 50;
   }
 
-  function gameOver() {
-    clearInterval(countdownInterval); // Zaman sayacını durdur
-    gameOverScreen.style.display = "block"; // Game Over ekranını göster
+  function resetTime() {
+    clearInterval(countdownInterval);
+    timeLeft = 10 - score * 0.5;
+    if (timeLeft < 2) timeLeft = 2;
+    countdownInterval = setInterval(decreaseTime, 1000);
   }
 
-  function restartGame() {
-    score = 0;
-    timeLeft = 5;
-    gameOverScreen.style.display = "none"; // Game Over ekranını gizle
-    resetKafa();
-    randomizePota();
-    resetTime(); // Süreyi sıfırla ve başlat
-    gameLoop(); // Oyunu yeniden başlat
+  function decreaseTime() {
+    timeLeft -= 1;
+    if (timeLeft <= 0) {
+      clearInterval(countdownInterval);
+      gameOver = true;
+    }
   }
-
-  restartButton.addEventListener("click", restartGame);
 
   function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawGround();
+
+    if (gameOver) {
+      drawGameOver();
+      return;
+    }
 
     if (!kafa.isDragging) {
       kafa.vy += kafa.gravity;
@@ -237,24 +209,24 @@
       if (kafa.y - kafa.radius < 0) {
         kafa.y = kafa.radius;
         kafa.vy *= kafa.bounce;
-      } else if (kafa.y + kafa.radius > canvas.height - 100) {
-        kafa.y = canvas.height - 100 - kafa.radius;
+      } else if (kafa.y + kafa.radius > canvas.height - 40) {
+        kafa.y = canvas.height - 40 - kafa.radius;
         kafa.vy *= kafa.bounce;
       }
 
       checkBasket();
     }
 
-    drawGround(); 
     drawPota();
     drawScore();
-    drawTime();  // Kalan süreyi ekranda göster
+    drawTime();
     if (showTrajectory) drawTrajectory();
     drawKafa();
     requestAnimationFrame(gameLoop);
   }
 
   function onStart(e) {
+    if (gameOver) return;
     const rect = canvas.getBoundingClientRect();
     const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
     const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
@@ -294,12 +266,13 @@
   canvas.addEventListener("mousedown", onStart);
   canvas.addEventListener("mousemove", onMove);
   canvas.addEventListener("mouseup", onEnd);
+
   canvas.addEventListener("touchstart", onStart);
   canvas.addEventListener("touchmove", onMove);
   canvas.addEventListener("touchend", onEnd);
 
+  resetTime();
   gameLoop();
-  resetTime(); // Oyunu başlat
 </script>
 </body>
 </html>
