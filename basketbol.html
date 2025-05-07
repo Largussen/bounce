@@ -72,7 +72,7 @@
     // Basketbol topu
     let ball = {
       x: width / 2,
-      y: height - 30,
+      y: height - 50,
       radius: 20,
       speedX: 0,
       speedY: 0,
@@ -83,7 +83,7 @@
     // Basketbol potası
     let basket = {
       x: width - 120,
-      y: height / 2,
+      y: height / 2 - 50,
       width: 100,
       height: 20
     };
@@ -92,7 +92,7 @@
     function startGame() {
       score = 0;
       ball.x = width / 2;
-      ball.y = height - 30;
+      ball.y = height - 50;
       ball.speedX = 0;
       ball.speedY = 0;
       animate();
@@ -136,7 +136,7 @@
     // Top sıfırlama
     function resetBall() {
       ball.x = width / 2;
-      ball.y = height - 30;
+      ball.y = height - 50;
       ball.speedX = 0;
       ball.speedY = 0;
     }
@@ -159,4 +159,3 @@
 
 </body>
 </html>
-
