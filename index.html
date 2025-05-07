@@ -5,40 +5,38 @@
   <title>Kafa Sektirmece</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-  }
-  canvas {
-    display: block;
-    touch-action: none;
-  }
-  #addBtn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    font-size: 48px;
-    padding: 16px 22px;
-    background: white;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  }
-</style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    }
+    canvas {
+      display: block;
+      touch-action: none;
+    }
+    #addBtn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      font-size: 48px;
+      padding: 16px 22px;
+      background: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+  </style>
 </head>
 <body>
 <canvas id="canvas"></canvas>
 <button id="addBtn">+</button>
-
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let width, height;
-
 function resize() {
   const dpr = window.devicePixelRatio || 1;
   canvas.width = window.innerWidth * dpr;
@@ -52,25 +50,20 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 resize();
-
 const kafaImg = new Image();
 kafaImg.src = 'kafa.png';
-
 const kafalar = [];
 const efektler = [];
-
 function Efekt(x, y) {
   this.x = x;
   this.y = y;
   this.radius = 0;
   this.alpha = 1;
 }
-
 Efekt.prototype.update = function() {
   this.radius += 2;
   this.alpha -= 0.05;
 };
-
 Efekt.prototype.draw = function() {
   ctx.beginPath();
   ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
@@ -78,7 +71,6 @@ Efekt.prototype.draw = function() {
   ctx.lineWidth = 2;
   ctx.stroke();
 };
-
 function Kafa() {
   this.x = Math.random() * width;
   this.y = Math.random() * height / 2;
@@ -90,19 +82,18 @@ function Kafa() {
   this.offsetY = 0;
   this.rotation = 0;
   this.rotationSpeed = 0;
+  this.prevX = 0;
+  this.prevY = 0;
 }
-
 Kafa.prototype.update = function () {
   if (!this.dragging) {
     this.x += this.vx;
     this.y += this.vy;
-    this.vy += 0.3; // yerçekimi
-
+    this.vy += 0.3;
     this.vx *= 0.985;
     this.vy *= 0.985;
     this.rotation += this.rotationSpeed;
     this.rotationSpeed *= 0.98;
-
     if (this.y + this.size > height) {
       this.y = height - this.size;
       if (Math.abs(this.vy) < 1.5) {
@@ -115,7 +106,6 @@ Kafa.prototype.update = function () {
         efektler.push(new Efekt(this.x + this.size / 2, this.y + this.size));
       }
     }
-
     if (this.x < 0) {
       this.x = 0;
       this.vx *= -0.8;
@@ -129,7 +119,6 @@ Kafa.prototype.update = function () {
     }
   }
 };
-
 Kafa.prototype.draw = function () {
   ctx.save();
   ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
@@ -137,16 +126,12 @@ Kafa.prototype.draw = function () {
   ctx.drawImage(kafaImg, -this.size / 2, -this.size / 2, this.size, this.size);
   ctx.restore();
 };
-
 function addKafa() {
   if (kafalar.length < 20) kafalar.push(new Kafa());
 }
-
 document.getElementById('addBtn').addEventListener('click', addKafa);
-
 let draggingKafa = null;
 let lastMouse = { x: 0, y: 0 };
-
 function getMousePos(e) {
   if (e.touches) {
     return { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -154,7 +139,6 @@ function getMousePos(e) {
     return { x: e.clientX, y: e.clientY };
   }
 }
-
 function handleDown(e) {
   const pos = getMousePos(e);
   lastMouse = pos;
@@ -168,45 +152,39 @@ function handleDown(e) {
       k.dragging = true;
       k.offsetX = pos.x - k.x;
       k.offsetY = pos.y - k.y;
+      k.prevX = k.x;
+      k.prevY = k.y;
       break;
     }
   }
 }
-
 function handleMove(e) {
   if (draggingKafa) {
     const pos = getMousePos(e);
     const dx = pos.x - lastMouse.x;
     const dy = pos.y - lastMouse.y;
-
     draggingKafa.x = pos.x - draggingKafa.offsetX;
     draggingKafa.y = pos.y - draggingKafa.offsetY;
-
-    draggingKafa.vx = dx * 0.5;
-    draggingKafa.vy = dy * 0.5;
-    draggingKafa.rotationSpeed = dx * 0.01;
-
+    draggingKafa.vx = dx * 0.6;
+    draggingKafa.vy = dy * 0.6;
+    draggingKafa.rotationSpeed = dx * 0.015;
     lastMouse = pos;
   }
 }
-
 function handleUp() {
   if (draggingKafa) {
     draggingKafa.dragging = false;
     draggingKafa = null;
   }
 }
-
 canvas.addEventListener('mousedown', handleDown);
 canvas.addEventListener('mousemove', handleMove);
 canvas.addEventListener('mouseup', handleUp);
 canvas.addEventListener('touchstart', handleDown, { passive: false });
 canvas.addEventListener('touchmove', handleMove, { passive: false });
 canvas.addEventListener('touchend', handleUp);
-
 function handleCollisions() {
   const bounce = 0.7;
-
   for (let i = 0; i < kafalar.length; i++) {
     for (let j = i + 1; j < kafalar.length; j++) {
       const a = kafalar[i];
@@ -215,19 +193,15 @@ function handleCollisions() {
       const dy = b.y + b.size / 2 - (a.y + a.size / 2);
       const dist = Math.hypot(dx, dy);
       const minDist = (a.size + b.size) / 2;
-
       if (dist < minDist) {
         const overlap = minDist - dist;
         const nx = dx / dist;
         const ny = dy / dist;
-
         a.x -= nx * overlap / 2;
         a.y -= ny * overlap / 2;
         b.x += nx * overlap / 2;
         b.y += ny * overlap / 2;
-
         const p = 2 * (a.vx * nx + a.vy * ny - b.vx * nx - b.vy * ny) / 2;
-
         a.vx -= bounce * p * nx;
         a.vy -= bounce * p * ny;
         b.vx += bounce * p * nx;
@@ -236,25 +210,20 @@ function handleCollisions() {
     }
   }
 }
-
 function animate() {
   ctx.clearRect(0, 0, width, height);
   handleCollisions();
-
   efektler.forEach(e => e.update());
   efektler.forEach(e => e.draw());
   for (let i = efektler.length - 1; i >= 0; i--) {
     if (efektler[i].alpha <= 0) efektler.splice(i, 1);
   }
-
   kafalar.forEach(k => {
     k.update();
     k.draw();
   });
-
   requestAnimationFrame(animate);
 }
-
 kafaImg.onload = function () {
   addKafa();
   animate();
