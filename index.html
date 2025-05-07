@@ -143,8 +143,13 @@
 
   function selectKafa(index) {
     selectedKafaIndex = index;  // Tıklanan kafa seçilir
-    alert("Kafa seçildi! Şimdi oyun moduna geçiyorsunuz.");
-    // Oyun moduna geçiş yapabilirsiniz. (Burada mod seçme kısmına yönlendirme ekleyebilirsiniz.)
+    startGame();  // Oyun başlasın
+  }
+
+  function startGame() {
+    // Kafayı seçtikten sonra oyun moduna geçişi başlatabiliriz
+    document.body.innerHTML = ''; // Seçim ekranını kaldırıyoruz
+    gameLoop(); // Oyun döngüsünü başlatıyoruz
   }
 
   function gameLoop() {
