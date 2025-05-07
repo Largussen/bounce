@@ -66,7 +66,6 @@
       width: 100px;
       height: 100px;
       cursor: pointer;
-      animation: shake 1s infinite alternate;
       transition: transform 0.3s ease-in-out;
     }
 
@@ -75,7 +74,6 @@
     }
 
     .kafa-text {
-      display: none;
       position: absolute;
       width: 100px;
       text-align: center;
@@ -93,15 +91,11 @@
     }
 
     .kafa3-text {
-      bottom: -50px; /* Kafa3'ün yazısını aşağıya kaydırıyoruz */
+      bottom: -50px;
     }
 
     .kafa4-text {
-      bottom: -50px; /* Kafa4'ün yazısını aşağıya kaydırıyoruz */
-    }
-
-    .kafa-container .kafa:hover + .kafa-text {
-      display: block;
+      bottom: -50px;
     }
 
     .mode-buttons {
@@ -133,6 +127,20 @@
       0% { top: -100px; opacity: 0.6; }
       100% { top: 100vh; opacity: 0; }
     }
+
+    @keyframes swing {
+      0% { transform: translateX(0); }
+      50% { transform: translateX(5px); }
+      100% { transform: translateX(0); }
+    }
+
+    .kafa-wrapper {
+      position: relative;
+      display: inline-block;
+      animation-name: swing;
+      animation-iteration-count: infinite;
+      animation-timing-function: ease-in-out;
+    }
   </style>
 </head>
 <body>
@@ -140,19 +148,19 @@
   <h1 class="animated-title">Kafa Seç!</h1>
 
   <div class="kafa-container" id="kafaContainer">
-    <div style="position: relative;">
+    <div class="kafa-wrapper">
       <img src="kafa1.png" class="kafa" data-id="1">
       <div class="kafa-text kafa1-text">En Kafa Benim!</div>
     </div>
-    <div style="position: relative;">
+    <div class="kafa-wrapper">
       <img src="kafa2.png" class="kafa" data-id="2">
       <div class="kafa-text kafa2-text">Kocamanım!</div>
     </div>
-    <div style="position: relative;">
+    <div class="kafa-wrapper">
       <img src="kafa3.png" class="kafa" data-id="3">
       <div class="kafa-text kafa3-text">Hayır, en kocaman benimki!</div>
     </div>
-    <div style="position: relative;">
+    <div class="kafa-wrapper">
       <img src="kafa4.png" class="kafa" data-id="4">
       <div class="kafa-text kafa4-text">Diğer kulağımı kaybettim!</div>
     </div>
@@ -165,6 +173,7 @@
 
   <script>
     const kafalar = document.querySelectorAll('.kafa');
+    const wrappers = document.querySelectorAll('.kafa-wrapper');
     const kafaContainer = document.getElementById('kafaContainer');
     const modeButtons = document.getElementById('modeButtons');
 
@@ -198,12 +207,7 @@
       }
     }
 
-    kafalar.forEach((kafa, index) => {
-      const randomDuration = Math.random() * 1 + 1 + "s";
-      kafa.style.animation = `shake ${randomDuration} infinite alternate`;
-    });
-
-    kafalar.forEach(kafa => {
+    kafalar.forEach((kafa) => {
       kafa.addEventListener('click', () => {
         localStorage.setItem('seciliKafa', kafa.getAttribute('data-id'));
         kafaContainer.style.display = 'none';
@@ -211,9 +215,12 @@
       });
     });
 
-    function gotoGame(page) {
-      window.location.href = page;
-    }
+    wrappers.forEach(wrapper => {
+      const duration = (Math.random() * 1.5 + 1).toFixed(2) + 's';
+      const delay = (Math.random() * 2).toFixed(2) + 's';
+      wrapper.style.animationDuration = duration;
+      wrapper.style.animationDelay = delay;
+    });
 
     window.onload = addMovingKafalar;
   </script>
