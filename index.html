@@ -31,18 +31,34 @@
 
     .animated-title span {
       display: inline-block;
-      animation: bounceColor 1.5s infinite ease-in-out;
+      animation: bounceColor 2s infinite ease-in-out;
       animation-delay: calc(var(--i) * 0.1s);
     }
 
     @keyframes bounceColor {
-      0%, 100% {
+      0% {
         transform: translateY(0);
-        color: #f1c40f;
+        color: #ff6347; /* Tomat Red */
       }
-      50% {
+      20% {
         transform: translateY(-10px);
-        color: #e74c3c;
+        color: #ffd700; /* Gold */
+      }
+      40% {
+        transform: translateY(0);
+        color: #40e0d0; /* Turquoise */
+      }
+      60% {
+        transform: translateY(-10px);
+        color: #8a2be2; /* Blue Violet */
+      }
+      80% {
+        transform: translateY(0);
+        color: #ff69b4; /* Hot Pink */
+      }
+      100% {
+        transform: translateY(-10px);
+        color: #00fa9a; /* Medium Spring Green */
       }
     }
 
