@@ -57,6 +57,12 @@
       width: 100px;
       height: 100px;
       cursor: pointer;
+      animation: shake 1s infinite alternate;
+    }
+
+    @keyframes shake {
+      0% { transform: rotate(-5deg); }
+      100% { transform: rotate(5deg); }
     }
 
     .mode-buttons {
@@ -95,10 +101,6 @@
       }
     }
 
-    @keyframes rotate {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
   </style>
 </head>
 <body>
@@ -106,9 +108,9 @@
   <h1 class="animated-title">Kafa Seç!</h1>
 
   <div class="kafa-container" id="kafaContainer">
-    <img src="kafa1.png" class="kafa" data-id="1" style="animation: rotate 2s linear infinite;">
-    <img src="kafa2.png" class="kafa" data-id="2" style="animation: rotate 3s linear infinite; animation-delay: 0.5s;">
-    <img src="kafa3.png" class="kafa" data-id="3" style="animation: rotate 1.8s linear infinite; animation-delay: 0.2s;">
+    <img src="kafa1.png" class="kafa" data-id="1">
+    <img src="kafa2.png" class="kafa" data-id="2">
+    <img src="kafa3.png" class="kafa" data-id="3">
   </div>
 
   <div class="mode-buttons" id="modeButtons">
