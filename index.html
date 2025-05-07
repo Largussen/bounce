@@ -71,12 +71,18 @@
       width: 100px;
       height: 100px;
       cursor: pointer;
-      animation: shake 1s infinite alternate;
+      animation: rotateKafa 2s infinite ease-in-out;
       transition: transform 0.3s ease-in-out;
     }
 
     .kafa:hover {
       transform: scale(1.2);
+    }
+
+    @keyframes rotateKafa {
+      0% { transform: rotate(-8deg); }
+      50% { transform: rotate(8deg); }
+      100% { transform: rotate(-8deg); }
     }
 
     .kafa-text {
@@ -187,11 +193,6 @@
         document.body.appendChild(movingKafa);
       }
     }
-
-    kafalar.forEach((kafa, index) => {
-      const randomDuration = Math.random() * 1 + 1 + "s";
-      kafa.style.animation = `shake ${randomDuration} infinite alternate`;
-    });
 
     kafalar.forEach(kafa => {
       kafa.addEventListener('click', () => {
