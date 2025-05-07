@@ -35,29 +35,24 @@
       animation-delay: calc(var(--i) * 0.1s);
     }
 
+    /* Yalnızca renk geçişi olacak */
     @keyframes bounceColor {
       0% {
-        transform: translateY(0);
-        color: #ff6347; /* Tomat Red */
+        color: #ff6347; /* Tomato Red */
       }
       20% {
-        transform: translateY(-10px);
         color: #ffd700; /* Gold */
       }
       40% {
-        transform: translateY(0);
         color: #40e0d0; /* Turquoise */
       }
       60% {
-        transform: translateY(-10px);
         color: #8a2be2; /* Blue Violet */
       }
       80% {
-        transform: translateY(0);
         color: #ff69b4; /* Hot Pink */
       }
       100% {
-        transform: translateY(-10px);
         color: #00fa9a; /* Medium Spring Green */
       }
     }
