@@ -27,34 +27,32 @@
       justify-content: center;
       margin-bottom: 40px;
       z-index: 2;
+      animation: bounceText 3s ease-in-out infinite; /* Yeni animasyon */
     }
 
     .animated-title span {
       display: inline-block;
-      animation: bounceColor 2s infinite ease-in-out;
+      animation: bounceColor 5s infinite ease-in-out; /* Renk geçişini yavaşlattık */
       animation-delay: calc(var(--i) * 0.1s);
+    }
+
+    /* Yazıya ufak bir titreşim animasyonu ekliyoruz */
+    @keyframes bounceText {
+      0% { transform: translateY(0); }
+      25% { transform: translateY(-5px); }
+      50% { transform: translateY(0); }
+      75% { transform: translateY(5px); }
+      100% { transform: translateY(0); }
     }
 
     /* Yalnızca renk geçişi olacak */
     @keyframes bounceColor {
-      0% {
-        color: #ff6347; /* Tomato Red */
-      }
-      20% {
-        color: #ffd700; /* Gold */
-      }
-      40% {
-        color: #40e0d0; /* Turquoise */
-      }
-      60% {
-        color: #8a2be2; /* Blue Violet */
-      }
-      80% {
-        color: #ff69b4; /* Hot Pink */
-      }
-      100% {
-        color: #00fa9a; /* Medium Spring Green */
-      }
+      0% { color: #ff6347; } /* Tomato Red */
+      20% { color: #ffd700; } /* Gold */
+      40% { color: #40e0d0; } /* Turquoise */
+      60% { color: #8a2be2; } /* Blue Violet */
+      80% { color: #ff69b4; } /* Hot Pink */
+      100% { color: #00fa9a; } /* Medium Spring Green */
     }
 
     .kafa-container {
@@ -104,14 +102,8 @@
 
     /* Rastgele hız ve pozisyonlar için animasyon */
     @keyframes moveKafalar {
-      0% {
-        top: -100px;
-        opacity: 0.6;
-      }
-      100% {
-        top: 100vh;
-        opacity: 0;
-      }
+      0% { top: -100px; opacity: 0.6; }
+      100% { top: 100vh; opacity: 0; }
     }
 
   </style>
