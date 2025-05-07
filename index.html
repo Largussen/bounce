@@ -138,6 +138,11 @@
       <img src="kafa3.png" class="kafa" data-id="3">
       <div class="kafa-text">kafası en büyük benim!</div>
     </div>
+    <!-- Yeni kafa ekledik -->
+    <div class="kafa-wrapper">
+      <img src="kafa4.png" class="kafa" data-id="4">
+      <div class="kafa-text">yeni kafa burada!</div>
+    </div>
   </div>
 
   <div class="mode-buttons" id="modeButtons">
@@ -169,7 +174,7 @@
         const randomDuration = Math.random() * 4 + 2 + "s";
 
         const movingKafa = document.createElement('img');
-        movingKafa.src = `kafa${Math.floor(Math.random() * 3) + 1}.png`;
+        movingKafa.src = `kafa${Math.floor(Math.random() * 4) + 1}.png`; <!-- Yeni kafa sayısı ekledik -->
         movingKafa.classList.add('moving-kafa');
         movingKafa.style.top = `${randomTop}px`;
         movingKafa.style.left = `${randomLeft}px`;
