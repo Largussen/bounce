@@ -81,6 +81,7 @@
       border-radius: 10px;
     }
 
+    /* Arka planda kayan kafalar */
     .moving-kafa {
       position: absolute;
       width: 80px;
@@ -90,6 +91,7 @@
       pointer-events: none;
     }
 
+    /* Rastgele hız ve pozisyonlar için animasyon */
     @keyframes moveKafalar {
       0% {
         top: -100px;
@@ -134,14 +136,14 @@
       title.appendChild(span);
     });
 
-    // Arka plan kafalarını ekle
+    // Arka planda kafaların hareketini ekleyelim
     function addMovingKafalar() {
-      const numberOfKafalar = 50;
+      const numberOfKafalar = 50; // Daha fazla kafa ekleyelim
       for (let i = 0; i < numberOfKafalar; i++) {
         const randomTop = Math.floor(Math.random() * -200) - 100;
         const randomLeft = Math.floor(Math.random() * window.innerWidth);
-        const randomDelay = Math.random() * 2 + "s";
-        const randomDuration = Math.random() * 3 + 1 + "s";
+        const randomDelay = Math.random() * 2 + "s"; // Yavaşlatılmış gecikme
+        const randomDuration = Math.random() * 4 + 2 + "s"; // Yavaşlatılmış hız
 
         const movingKafa = document.createElement('img');
         movingKafa.src = `kafa${Math.floor(Math.random() * 3) + 1}.png`;
@@ -155,6 +157,13 @@
       }
     }
 
+    // Kafaların dönme animasyonlarını farklılaştır
+    kafalar.forEach((kafa, index) => {
+      const randomDuration = Math.random() * 1 + 1 + "s"; // Farklı dönme süreleri
+      kafa.style.animation = `shake ${randomDuration} infinite alternate`;
+    });
+
+    // Kafa seçim işlemi
     kafalar.forEach(kafa => {
       kafa.addEventListener('click', () => {
         localStorage.setItem('seciliKafa', kafa.getAttribute('data-id'));
@@ -167,6 +176,7 @@
       window.location.href = page;
     }
 
+    // Sayfa yüklendiğinde hareket eden kafaları ekle
     window.onload = addMovingKafalar;
   </script>
 
