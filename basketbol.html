@@ -11,7 +11,6 @@
       box-sizing: border-box;
       user-select: none;
     }
-
     html, body {
       width: 100%;
       height: 100%;
@@ -19,7 +18,6 @@
       background: #222;
       touch-action: none;
     }
-
     canvas {
       display: block;
       background-color: #333;
@@ -28,7 +26,6 @@
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
-
 <script>
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
@@ -42,13 +39,12 @@
 
   let score = 0;
   let gameOver = false;
-
   let timeLeft = 10;
-  let countdownInterval;
+  let lastTime = Date.now();
 
   let kafa = {
     x: canvas.width / 2,
-    y: canvas.height - 120,
+    y: canvas.height - 150,
     radius: 40,
     vx: 0,
     vy: 0,
@@ -65,8 +61,15 @@
     radius: 50
   };
 
+  const zeminY = canvas.height - 50;
+
   let showTrajectory = false;
   let trajectoryPoints = [];
+
+  function drawZemin() {
+    ctx.fillStyle = "#444";
+    ctx.fillRect(0, zeminY, canvas.width, canvas.height - zeminY);
+  }
 
   function drawKafa() {
     if (kafaImage.complete) {
@@ -106,28 +109,27 @@
     ctx.fillStyle = "#fff";
     ctx.font = "24px sans-serif";
     ctx.fillText("Skor: " + score, 20, 40);
-  }
-
-  function drawTime() {
-    ctx.fillStyle = "#fff";
-    ctx.font = "24px sans-serif";
-    ctx.fillText("Süre: " + timeLeft.toFixed(0), 20, 70);
-  }
-
-  function drawGround() {
-    ctx.fillStyle = "#444";
-    ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+    ctx.fillText("Süre: " + timeLeft.toFixed(1) + " sn", 20, 70);
   }
 
   function drawGameOver() {
     ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     ctx.fillStyle = "#fff";
-    ctx.font = "48px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 20);
+    ctx.font = "48px sans-serif";
+    ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 40);
     ctx.font = "32px sans-serif";
-    ctx.fillText("Skor: " + score, canvas.width / 2, canvas.height / 2 + 30);
+    ctx.fillText("Skor: " + score, canvas.width / 2, canvas.height / 2 + 10);
+
+    // Restart butonu
+    ctx.fillStyle = "#007bff";
+    ctx.fillRect(canvas.width / 2 - 80, canvas.height / 2 + 40, 160, 50);
+    ctx.fillStyle = "#fff";
+    ctx.font = "24px sans-serif";
+    ctx.fillText("Yeniden Başla", canvas.width / 2, canvas.height / 2 + 75);
+    ctx.textAlign = "start";
   }
 
   function calculateTrajectory(dx, dy) {
@@ -148,7 +150,6 @@
     const dx = kafa.x - pota.x;
     const dy = kafa.y - pota.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-
     if (distance < pota.radius - kafa.radius / 2) {
       score++;
       resetKafa();
@@ -157,9 +158,14 @@
     }
   }
 
+  function resetTime() {
+    timeLeft = Math.max(10 - score * 0.5, 2);
+    lastTime = Date.now();
+  }
+
   function resetKafa() {
     kafa.x = canvas.width / 2;
-    kafa.y = canvas.height - 120;
+    kafa.y = canvas.height - 150;
     kafa.vx = 0;
     kafa.vy = 0;
   }
@@ -169,26 +175,30 @@
     pota.y = Math.random() * (canvas.height / 2) + 50;
   }
 
-  function resetTime() {
-    clearInterval(countdownInterval);
-    timeLeft = 10 - score * 0.5;
-    if (timeLeft < 2) timeLeft = 2;
-    countdownInterval = setInterval(decreaseTime, 1000);
-  }
-
-  function decreaseTime() {
-    timeLeft -= 1;
-    if (timeLeft <= 0) {
-      clearInterval(countdownInterval);
-      gameOver = true;
-    }
+  function restartGame() {
+    score = 0;
+    gameOver = false;
+    resetKafa();
+    randomizePota();
+    resetTime();
+    gameLoop();
   }
 
   function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawGround();
 
     if (gameOver) {
+      drawGameOver();
+      return;
+    }
+
+    let now = Date.now();
+    let delta = (now - lastTime) / 1000;
+    timeLeft -= delta;
+    lastTime = now;
+
+    if (timeLeft <= 0) {
+      gameOver = true;
       drawGameOver();
       return;
     }
@@ -198,6 +208,7 @@
       kafa.x += kafa.vx;
       kafa.y += kafa.vy;
 
+      // Kenarlardan sekme
       if (kafa.x - kafa.radius < 0) {
         kafa.x = kafa.radius;
         kafa.vx *= kafa.bounce;
@@ -209,17 +220,17 @@
       if (kafa.y - kafa.radius < 0) {
         kafa.y = kafa.radius;
         kafa.vy *= kafa.bounce;
-      } else if (kafa.y + kafa.radius > canvas.height - 40) {
-        kafa.y = canvas.height - 40 - kafa.radius;
+      } else if (kafa.y + kafa.radius > zeminY) {
+        kafa.y = zeminY - kafa.radius;
         kafa.vy *= kafa.bounce;
       }
 
       checkBasket();
     }
 
+    drawZemin();
     drawPota();
     drawScore();
-    drawTime();
     if (showTrajectory) drawTrajectory();
     drawKafa();
     requestAnimationFrame(gameLoop);
@@ -227,6 +238,7 @@
 
   function onStart(e) {
     if (gameOver) return;
+
     const rect = canvas.getBoundingClientRect();
     const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
     const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
@@ -263,11 +275,39 @@
     showTrajectory = false;
   }
 
-  canvas.addEventListener("mousedown", onStart);
+  canvas.addEventListener("mousedown", (e) => {
+    if (gameOver) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const btnX = canvas.width / 2 - 80;
+      const btnY = canvas.height / 2 + 40;
+      if (x > btnX && x < btnX + 160 && y > btnY && y < btnY + 50) {
+        restartGame();
+      }
+    } else {
+      onStart(e);
+    }
+  });
+
   canvas.addEventListener("mousemove", onMove);
   canvas.addEventListener("mouseup", onEnd);
 
-  canvas.addEventListener("touchstart", onStart);
+  canvas.addEventListener("touchstart", (e) => {
+    if (gameOver) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.touches[0].clientX - rect.left;
+      const y = e.touches[0].clientY - rect.top;
+      const btnX = canvas.width / 2 - 80;
+      const btnY = canvas.height / 2 + 40;
+      if (x > btnX && x < btnX + 160 && y > btnY && y < btnY + 50) {
+        restartGame();
+      }
+    } else {
+      onStart(e);
+    }
+  });
+
   canvas.addEventListener("touchmove", onMove);
   canvas.addEventListener("touchend", onEnd);
 
