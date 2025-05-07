@@ -99,12 +99,12 @@
 
     // Kafaların arka planda rastgele kayması için fonksiyon
     function addMovingKafalar() {
-      const numberOfKafalar = 10; // Arka planda kaç kafa kayacak
+      const numberOfKafalar = 20; // Arka planda kaç kafa kayacak
       for (let i = 0; i < numberOfKafalar; i++) {
         const randomTop = Math.floor(Math.random() * -200) - 100; // Yükseklik için rastgele değer
         const randomLeft = Math.floor(Math.random() * window.innerWidth); // Ekranın genişliği boyunca rastgele bir pozisyon
-        const randomDelay = Math.random() * 3 + "s"; // Rastgele animasyon gecikmesi
-        const randomDuration = Math.random() * 10 + 5 + "s"; // Rastgele animasyon süresi
+        const randomDelay = Math.random() * 1 + "s"; // Rastgele animasyon gecikmesi
+        const randomDuration = Math.random() * 3 + 2 + "s"; // Rastgele animasyon süresi, hız daha hızlı
 
         const movingKafa = document.createElement('img');
         movingKafa.src = `kafa${Math.floor(Math.random() * 3) + 1}.png`; // Rastgele kafa seçimi
