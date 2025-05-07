@@ -15,11 +15,11 @@
       color: white;
       font-family: sans-serif;
       flex-direction: column;
-      overflow: hidden;
-      overflow-x: hidden;
+      overflow: hidden; /* Sayfa kaymasını engeller */
     }
     canvas {
       border: 2px solid white;
+      touch-action: none; /* Mobilde kayma engelleniyor */
     }
     .score {
       font-size: 24px;
