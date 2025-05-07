@@ -44,7 +44,7 @@
 
   let kafa = {
     x: canvas.width / 2,
-    y: canvas.height - 100,
+    y: canvas.height - 150,  // Yüksekliği artırdık
     radius: 40,
     vx: 0,
     vy: 0,
@@ -106,7 +106,7 @@
 
   function drawGround() {
     ctx.fillStyle = "#444"; // Zemin rengi
-    ctx.fillRect(0, canvas.height - 50, canvas.width, 50); // Zemin çizimi
+    ctx.fillRect(0, canvas.height - 100, canvas.width, 100); // Zemini daha yukarı taşıdık
   }
 
   function calculateTrajectory(dx, dy) {
@@ -137,7 +137,7 @@
 
   function resetKafa() {
     kafa.x = canvas.width / 2;
-    kafa.y = canvas.height - 100;
+    kafa.y = canvas.height - 150;  // Yüksekliği artırdık
     kafa.vx = 0;
     kafa.vy = 0;
   }
@@ -167,8 +167,8 @@
       if (kafa.y - kafa.radius < 0) {
         kafa.y = kafa.radius;
         kafa.vy *= kafa.bounce;
-      } else if (kafa.y + kafa.radius > canvas.height - 50) {
-        kafa.y = canvas.height - 50 - kafa.radius; // Zeminle çarpma
+      } else if (kafa.y + kafa.radius > canvas.height - 100) { // Zeminle çarpma yüksekliğini artırdık
+        kafa.y = canvas.height - 100 - kafa.radius; // Zeminle çarpma
         kafa.vy *= kafa.bounce;
       }
 
