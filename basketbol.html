@@ -58,15 +58,22 @@
     if (showIndicator) {
       const dx = dragStart.x - dragEnd.x;
       const dy = dragStart.y - dragEnd.y;
-      const steps = 10;
-      ctx.fillStyle = "white";
-      for (let i = 1; i <= steps; i++) {
+      const steps = 20;
+      
+      // Göstergeyi çiz
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      for (let i = 0; i <= steps; i++) {
         const dotX = kafa.x + (dx / steps) * i;
         const dotY = kafa.y + (dy / steps) * i;
-        ctx.beginPath();
-        ctx.arc(dotX, dotY, 3, 0, Math.PI * 2);
-        ctx.fill();
+        if (i === 0) {
+          ctx.moveTo(dotX, dotY);
+        } else {
+          ctx.lineTo(dotX, dotY);
+        }
       }
+      ctx.stroke();
     }
 
     // Kafa çiz
