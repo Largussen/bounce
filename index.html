@@ -41,6 +41,17 @@
       padding: 10px;
       border: 2px solid #fff;
       background-color: rgba(0, 0, 0, 0.5);
+      flex-direction: column;
+    }
+
+    .kafa-container::before {
+      content: "Kafa Seç!";
+      color: white;
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 18px;
     }
 
     .kafa {
@@ -55,16 +66,6 @@
       border: 2px solid #ff6700;
     }
 
-    .kafa-container::before {
-      content: "Kafa Seç!";
-      color: white;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 18px;
-    }
-
   </style>
 </head>
 <body>
@@ -72,9 +73,9 @@
 <canvas id="gameCanvas"></canvas>
 
 <div class="kafa-container">
-  <img src="kafa1.png" class="kafa" id="kafa1">
-  <img src="kafa2.png" class="kafa" id="kafa2">
-  <img src="kafa3.png" class="kafa" id="kafa3">
+  <img src="kafa1.png" class="kafa" id="kafa1" onclick="selectKafa(0)">
+  <img src="kafa2.png" class="kafa" id="kafa2" onclick="selectKafa(1)">
+  <img src="kafa3.png" class="kafa" id="kafa3" onclick="selectKafa(2)">
 </div>
 
 <script>
@@ -107,7 +108,7 @@
     });
   }
 
-  // Kafa seçimi işlemi
+  // Seçilen kafa indexi
   let selectedKafaIndex = -1;
 
   function drawBackgroundKafalar() {
@@ -140,25 +141,11 @@
     }
   }
 
-  function onKafaClick(e) {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    for (let i = 0; i < totalKafalar; i++) {
-      const x = (canvas.width / 2) - (totalKafalar * 60) / 2 + i * 60;
-      const y = canvas.height / 2 - 30;
-      const width = 50;
-      const height = 50;
-
-      // Tıklama alanı kontrolü
-      if (mouseX > x && mouseX < x + width && mouseY > y && mouseY < y + height) {
-        selectedKafaIndex = i;  // Tıklanan kafa seçilir
-      }
-    }
+  function selectKafa(index) {
+    selectedKafaIndex = index;  // Tıklanan kafa seçilir
+    alert("Kafa seçildi! Şimdi oyun moduna geçiyorsunuz.");
+    // Oyun moduna geçiş yapabilirsiniz. (Burada mod seçme kısmına yönlendirme ekleyebilirsiniz.)
   }
-
-  canvas.addEventListener("click", onKafaClick);
 
   function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);  // Her frame temizle
