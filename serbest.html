@@ -28,21 +28,6 @@
       z-index: 10;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     }
-    #kafaSelect {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 20;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 10px;
-      border-radius: 5px;
-    }
-    #kafaSelect img {
-      width: 80px;
-      height: 80px;
-      margin-right: 10px;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
@@ -50,12 +35,6 @@
 <button id="addBtn">+</button>
 <audio id="bounceSound" src="bounce.mp3"></audio>
 <audio id="explosionSound" src="boom.mp3"></audio>
-
-<!-- Kafa Seçim Menüsü -->
-<div id="kafaSelect">
-  <img src="kafa1.png" id="kafa1" alt="Kafa 1" />
-  <img src="kafa2.png" id="kafa2" alt="Kafa 2" />
-</div>
 
 <script>
 const canvas = document.getElementById('canvas');
@@ -76,12 +55,19 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-let selectedKafa = null;
+// Kafa resimlerini bir diziye ekle
+const kafaResimleri = [
+  'kafa1.png', // Kafa 1
+  'kafa2.png', // Kafa 2
+  'kafa3.png', // Kafa 3
+  // Buraya daha fazla kafa ekleyebilirsin
+];
 
-const kafa1Img = new Image();
-kafa1Img.src = 'kafa1.png';
-const kafa2Img = new Image();
-kafa2Img.src = 'kafa2.png';
+const kafaImages = kafaResimleri.map(src => {
+  const img = new Image();
+  img.src = src;
+  return img;
+});
 
 const kafalar = [];
 const efektler = [];
@@ -155,7 +141,9 @@ function Kafa() {
   this.rotationSpeed = 0;
   this.prevX = 0;
   this.prevY = 0;
-  this.img = selectedKafa; // Seçilen kafa
+  // Rastgele kafa seçimi
+  const randomIndex = Math.floor(Math.random() * kafaImages.length); // Rastgele bir index seç
+  this.img = kafaImages[randomIndex];
 }
 
 Kafa.prototype.update = function () {
@@ -204,25 +192,12 @@ Kafa.prototype.draw = function () {
 };
 
 function addKafa() {
-  if (selectedKafa) {
-    const kafa = new Kafa();
-    kafalar.push(kafa);
-  }
+  const kafa = new Kafa();
+  kafalar.push(kafa);
 }
 
 document.getElementById('addBtn').addEventListener('click', function() {
   addKafa();
-});
-
-// Kafa Seçimi
-document.getElementById('kafa1').addEventListener('click', function() {
-  selectedKafa = kafa1Img;
-  alert('Kafa 1 seçildi!');
-});
-
-document.getElementById('kafa2').addEventListener('click', function() {
-  selectedKafa = kafa2Img;
-  alert('Kafa 2 seçildi!');
 });
 
 let draggingKafa = null;
