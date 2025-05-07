@@ -1,167 +1,83 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Kafa Seç</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      user-select: none;
-    }
-
     body {
-      background-color: #222;
+      margin: 0;
+      background: #111;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
       overflow: hidden;
-      position: relative;
-    }
-
-    #gameCanvas {
-      background-color: #333;
-      border: 3px solid #fff;
-      position: absolute;
-    }
-
-    .kafa-container {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 200px;
-      height: 100px;
-      padding: 10px;
-      border: 2px solid #fff;
-      background-color: rgba(0, 0, 0, 0.5);
       flex-direction: column;
-    }
-
-    .kafa-container::before {
-      content: "Kafa Seç!";
       color: white;
-      position: absolute;
-      top: -20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 18px;
+      font-family: sans-serif;
     }
-
+    .kafa-container {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 40px;
+    }
     .kafa {
-      width: 50px;
-      height: 50px;
+      width: 100px;
+      height: 100px;
       cursor: pointer;
-      transition: transform 0.3s;
+      animation: shake 1s infinite alternate;
     }
-
-    .kafa.selected {
-      transform: scale(1.2);
-      border: 2px solid #ff6700;
+    @keyframes shake {
+      0% { transform: rotate(-5deg); }
+      100% { transform: rotate(5deg); }
     }
-
+    .mode-buttons {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .mode-buttons button {
+      padding: 15px 30px;
+      font-size: 20px;
+      cursor: pointer;
+      background: #fff;
+      border: none;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
 
-<canvas id="gameCanvas"></canvas>
+  <h1>Kafa Seç</h1>
+  <div class="kafa-container" id="kafaContainer">
+    <img src="kafa1.png" class="kafa" data-id="1">
+    <img src="kafa2.png" class="kafa" data-id="2">
+    <img src="kafa3.png" class="kafa" data-id="3">
+  </div>
 
-<div class="kafa-container">
-  <img src="kafa1.png" class="kafa" id="kafa1" onclick="selectKafa(0)">
-  <img src="kafa2.png" class="kafa" id="kafa2" onclick="selectKafa(1)">
-  <img src="kafa3.png" class="kafa" id="kafa3" onclick="selectKafa(2)">
-</div>
+  <div class="mode-buttons" id="modeButtons">
+    <button onclick="gotoGame('basketbol.html')">Basketbol Modu</button>
+    <button onclick="gotoGame('serbest.html')">Serbest Mod</button>
+  </div>
 
-<script>
-  const canvas = document.getElementById("gameCanvas");
-  const ctx = canvas.getContext("2d");
+  <script>
+    const kafalar = document.querySelectorAll('.kafa');
+    const kafaContainer = document.getElementById('kafaContainer');
+    const modeButtons = document.getElementById('modeButtons');
 
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  const kafaImages = [];
-  const totalKafalar = 3; // Seçilebilir kafaların sayısı
-  const maxBackgroundKafalar = 15; // Arka planda rastgele kayacak kafa sayısı
-  const backgroundKafalar = [];
-
-  // Kafa görsellerini yükleyelim
-  for (let i = 1; i <= totalKafalar; i++) {
-    const img = new Image();
-    img.src = `kafa${i}.png`;
-    kafaImages.push(img);
-  }
-
-  // Arka plandaki kafaları oluştur
-  for (let i = 0; i < maxBackgroundKafalar; i++) {
-    const randomKafaIndex = Math.floor(Math.random() * totalKafalar);
-    backgroundKafalar.push({
-      image: kafaImages[randomKafaIndex],
-      x: Math.random() * canvas.width,
-      y: -50,  // Yatay konumdan önce yukarıda başlasın
-      speed: Math.random() * 2 + 1,  // Farklı hızlarla kayacak
+    kafalar.forEach(kafa => {
+      kafa.addEventListener('click', () => {
+        localStorage.setItem('seciliKafa', kafa.getAttribute('data-id'));
+        kafaContainer.style.display = 'none';
+        modeButtons.style.display = 'flex';
+      });
     });
-  }
 
-  // Seçilen kafa indexi
-  let selectedKafaIndex = -1;
-
-  function drawBackgroundKafalar() {
-    backgroundKafalar.forEach((kafa) => {
-      kafa.y += kafa.speed;  // Kafanın yukarıdan aşağıya kaymasını sağla
-      if (kafa.y > canvas.height) {
-        kafa.y = -50;  // Ekranın dışına çıktığında tekrar yukarıya gelsin
-      }
-      ctx.drawImage(kafa.image, kafa.x, kafa.y, 50, 50);  // Kafayı çiz
-    });
-  }
-
-  function drawKafalar() {
-    // 3 seçilebilir kafa
-    for (let i = 0; i < totalKafalar; i++) {
-      const img = kafaImages[i];
-      const x = (canvas.width / 2) - (totalKafalar * 60) / 2 + i * 60;  // 3 kafa arasındaki mesafe
-      const y = canvas.height / 2 - 30;  // Yatayda ortalanmış ve biraz aşağıda
-      const width = 50;
-      const height = 50;
-
-      ctx.drawImage(img, x, y, width, height);
-
-      // Seçilen kafa olduğunda biraz büyütme efekti ekle
-      if (selectedKafaIndex === i) {
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "#ff6700";
-        ctx.strokeRect(x - 2, y - 2, width + 4, height + 4);  // Seçilen kafa etrafında kenarlık
-      }
+    function gotoGame(page) {
+      window.location.href = page;
     }
-  }
-
-  function selectKafa(index) {
-    selectedKafaIndex = index;  // Tıklanan kafa seçilir
-    startGame();  // Oyun başlasın
-  }
-
-  function startGame() {
-    // Kafayı seçtikten sonra oyun moduna geçişi başlatabiliriz
-    document.body.innerHTML = ''; // Seçim ekranını kaldırıyoruz
-    gameLoop(); // Oyun döngüsünü başlatıyoruz
-  }
-
-  function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);  // Her frame temizle
-    drawBackgroundKafalar();  // Arka plandaki kafaları çiz
-    drawKafalar();  // Seçilebilir kafaları çiz
-    requestAnimationFrame(gameLoop);  // Sonsuz döngüde animasyonu çalıştır
-  }
-
-  gameLoop();  // Başlat
-
-</script>
+  </script>
 
 </body>
 </html>
