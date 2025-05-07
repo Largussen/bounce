@@ -1,80 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Basketbol Kafa Oyunu</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Basketbol Modu</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
+      background: #111;
       touch-action: none;
-      background: #222;
     }
     canvas {
       display: block;
+      background: #111;
     }
   </style>
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
   <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-    let kafa = {
+    // Ekranı boyutlandır
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    const seciliKafaId = localStorage.getItem("seciliKafa") || "1";
+    const kafaImg = new Image();
+    kafaImg.src = `kafa${seciliKafaId}.png`;
+
+    const kafa = {
       x: canvas.width / 2,
-      y: canvas.height - 100,
-      radius: 30,
+      y: canvas.height / 2,
       vx: 0,
       vy: 0,
-      gravity: 0.6,
+      radius: 40,
       isDragging: false,
       launched: false
     };
 
     let dragStart = null;
-    let dots = [];
 
-    let pota = {
-      x: Math.random() * (canvas.width - 100) + 50,
-      y: Math.random() * (canvas.height / 2) + 50,
-      width: 60,
-      height: 10
-    };
+    canvas.addEventListener("pointerdown", (e) => {
+      const dx = e.clientX - kafa.x;
+      const dy = e.clientY - kafa.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
-    function resetKafa() {
-      kafa.x = canvas.width / 2;
-      kafa.y = canvas.height - 100;
-      kafa.vx = 0;
-      kafa.vy = 0;
-      kafa.launched = false;
-    }
+      if (distance < kafa.radius) {
+        kafa.isDragging = true;
+        dragStart = { x: e.clientX, y: e.clientY };
+      }
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+      if (kafa.isDragging) {
+        dragStart.currentX = e.clientX;
+        dragStart.currentY = e.clientY;
+      }
+    });
+
+    canvas.addEventListener("pointerup", (e) => {
+      if (kafa.isDragging) {
+        let dx = dragStart.x - e.clientX;
+        let dy = dragStart.y - e.clientY;
+
+        const maxPower = 150;
+        const distance = Math.min(Math.hypot(dx, dy), maxPower);
+        const angle = Math.atan2(dy, dx);
+
+        kafa.vx = (distance * Math.cos(angle)) / 10;
+        kafa.vy = (distance * Math.sin(angle)) / 10;
+        kafa.launched = true;
+        kafa.isDragging = false;
+        dragStart = null;
+      }
+    });
 
     function update() {
-      if (kafa.launched) {
-        kafa.vy += kafa.gravity;
+      if (!kafa.isDragging) {
+        kafa.vy += 0.5; // yerçekimi
         kafa.x += kafa.vx;
         kafa.y += kafa.vy;
 
-        // Basit çarpma kontrolü (pota ile kafa)
-        if (
-          kafa.x > pota.x &&
-          kafa.x < pota.x + pota.width &&
-          kafa.y > pota.y &&
-          kafa.y < pota.y + pota.height
-        ) {
-          // Skor arttı! Pota yer değiştiriyor.
-          pota.x = Math.random() * (canvas.width - 100) + 50;
-          pota.y = Math.random() * (canvas.height / 2) + 50;
-          resetKafa();
+        // Kenarlardan sekme
+        if (kafa.x - kafa.radius < 0 || kafa.x + kafa.radius > canvas.width) {
+          kafa.vx *= -1;
+          kafa.x = Math.max(kafa.radius, Math.min(canvas.width - kafa.radius, kafa.x));
         }
-
-        // Ekrandan çıkarsa reset
-        if (kafa.y > canvas.height || kafa.x < 0 || kafa.x > canvas.width) {
-          resetKafa();
+        if (kafa.y - kafa.radius < 0 || kafa.y + kafa.radius > canvas.height) {
+          kafa.vy *= -1;
+          kafa.y = Math.max(kafa.radius, Math.min(canvas.height - kafa.radius, kafa.y));
         }
       }
     }
@@ -82,72 +104,40 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Pota
-      ctx.fillStyle = "red";
-      ctx.fillRect(pota.x, pota.y, pota.width, pota.height);
-
-      // Kafa
-      ctx.fillStyle = "white";
-      ctx.beginPath();
-      ctx.arc(kafa.x, kafa.y, kafa.radius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Gösterge (nokta nokta çizgi)
+      // Göstergeler (drag sırasında)
       if (kafa.isDragging && dragStart) {
-        dots = [];
-        let dx = dragStart.x - kafa.x;
-        let dy = dragStart.y - kafa.y;
+        const dx = dragStart.x - dragStart.currentX;
+        const dy = dragStart.y - dragStart.currentY;
+        const length = Math.min(Math.hypot(dx, dy), 150);
+        const angle = Math.atan2(dy, dx);
+
         for (let i = 0; i < 10; i++) {
-          let t = i / 10;
-          dots.push({
-            x: kafa.x + dx * t,
-            y: kafa.y + dy * t
-          });
-        }
-        ctx.fillStyle = "cyan";
-        for (let dot of dots) {
+          const dotX = kafa.x + Math.cos(angle) * i * 10;
+          const dotY = kafa.y + Math.sin(angle) * i * 10;
           ctx.beginPath();
-          ctx.arc(dot.x, dot.y, 3, 0, Math.PI * 2);
+          ctx.arc(dotX, dotY, 3, 0, Math.PI * 2);
+          ctx.fillStyle = "white";
           ctx.fill();
         }
       }
+
+      // Kafa görseli
+      ctx.drawImage(
+        kafaImg,
+        kafa.x - kafa.radius,
+        kafa.y - kafa.radius,
+        kafa.radius * 2,
+        kafa.radius * 2
+      );
     }
 
-    function gameLoop() {
+    function loop() {
       update();
       draw();
-      requestAnimationFrame(gameLoop);
+      requestAnimationFrame(loop);
     }
 
-    gameLoop();
-
-    // Kontroller
-    canvas.addEventListener("pointerdown", e => {
-      const dist = Math.hypot(e.clientX - kafa.x, e.clientY - kafa.y);
-      if (dist < kafa.radius && !kafa.launched) {
-        kafa.isDragging = true;
-        dragStart = { x: e.clientX, y: e.clientY };
-      }
-    });
-
-    canvas.addEventListener("pointermove", e => {
-      if (kafa.isDragging) {
-        kafa.x = e.clientX;
-        kafa.y = e.clientY;
-      }
-    });
-
-    canvas.addEventListener("pointerup", e => {
-      if (kafa.isDragging) {
-        let dx = dragStart.x - e.clientX;
-        let dy = dragStart.y - e.clientY;
-        kafa.vx = dx / 10;
-        kafa.vy = dy / 10;
-        kafa.launched = true;
-        kafa.isDragging = false;
-        dragStart = null;
-      }
-    });
+    loop();
   </script>
 </body>
 </html>
