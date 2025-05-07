@@ -1,89 +1,82 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>KafaTop - Seçim</title>
+  <title>Kafa Seç</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      background: #111;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      overflow: hidden;
       flex-direction: column;
-      font-family: sans-serif;
       color: white;
+      font-family: sans-serif;
     }
-
-    .kafa-secimi {
+    .kafa-container {
       display: flex;
       gap: 20px;
-      flex-wrap: wrap;
-      justify-content: center;
+      margin-bottom: 40px;
     }
-
     .kafa {
       width: 100px;
       height: 100px;
       cursor: pointer;
-      animation: salla 0.6s ease-in-out infinite alternate;
-      transition: transform 0.2s;
+      animation: shake 1s infinite alternate;
     }
-
-    .kafa:hover {
-      transform: scale(1.1);
+    @keyframes shake {
+      0% { transform: rotate(-5deg); }
+      100% { transform: rotate(5deg); }
     }
-
-    @keyframes salla {
-      from { transform: rotate(-10deg); }
-      to { transform: rotate(10deg); }
+    .mode-buttons {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
     }
-
-    button {
-      margin-top: 40px;
-      padding: 12px 24px;
-      font-size: 18px;
-      background-color: white;
-      color: #203a43;
-      border: none;
-      border-radius: 8px;
+    .mode-buttons button {
+      padding: 15px 30px;
+      font-size: 20px;
       cursor: pointer;
+      background: #fff;
+      border: none;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
 
-  <h1>Kafanı Seç!</h1>
-  <div class="kafa-secimi" id="kafaSecimi"></div>
-  <button id="devamBtn" disabled>Devam Et</button>
+  <h1>Kafa Seç</h1>
+  <div class="kafa-container" id="kafaContainer">
+    <img src="kafa1.png" class="kafa" data-id="1">
+    <img src="kafa2.png" class="kafa" data-id="2">
+    <img src="kafa3.png" class="kafa" data-id="3">
+  </div>
+
+  <div class="mode-buttons" id="modeButtons">
+    <button onclick="gotoGame('basketbol.html')">Basketbol Modu</button>
+    <button onclick="gotoGame('serbest.html')">Serbest Mod</button>
+  </div>
 
   <script>
-    const kafaSayisi = 6; // kaç kafa görseli varsa
-    const secimDiv = document.getElementById("kafaSecimi");
-    const devamBtn = document.getElementById("devamBtn");
-    let secilenKafa = null;
+    const kafalar = document.querySelectorAll('.kafa');
+    const kafaContainer = document.getElementById('kafaContainer');
+    const modeButtons = document.getElementById('modeButtons');
 
-    for (let i = 1; i <= kafaSayisi; i++) {
-      const img = document.createElement("img");
-      img.src = `kafa${i}.png`;
-      img.classList.add("kafa");
-      img.dataset.kafa = `kafa${i}.png`;
-      img.addEventListener("click", () => {
-        document.querySelectorAll(".kafa").forEach(k => k.style.border = "none");
-        img.style.border = "4px solid white";
-        secilenKafa = img.dataset.kafa;
-        devamBtn.disabled = false;
+    kafalar.forEach(kafa => {
+      kafa.addEventListener('click', () => {
+        localStorage.setItem('seciliKafa', kafa.getAttribute('data-id'));
+        kafaContainer.style.display = 'none';
+        modeButtons.style.display = 'flex';
       });
-      secimDiv.appendChild(img);
-    }
-
-    devamBtn.addEventListener("click", () => {
-      localStorage.setItem("secilenKafa", secilenKafa);
-      window.location.href = "oyunsec.html";
     });
+
+    function gotoGame(page) {
+      window.location.href = page;
+    }
   </script>
 
 </body>
