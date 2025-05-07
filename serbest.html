@@ -28,6 +28,21 @@
       z-index: 10;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     }
+    #kafaSelect {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 20;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 5px;
+    }
+    #kafaSelect img {
+      width: 80px;
+      height: 80px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -35,6 +50,12 @@
 <button id="addBtn">+</button>
 <audio id="bounceSound" src="bounce.mp3"></audio>
 <audio id="explosionSound" src="boom.mp3"></audio>
+
+<!-- Kafa Seçim Menüsü -->
+<div id="kafaSelect">
+  <img src="kafa1.png" id="kafa1" alt="Kafa 1" />
+  <img src="kafa2.png" id="kafa2" alt="Kafa 2" />
+</div>
 
 <script>
 const canvas = document.getElementById('canvas');
@@ -55,8 +76,13 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-const kafaImg = new Image();
-kafaImg.src = 'kafa.png';
+let selectedKafa = null;
+
+const kafa1Img = new Image();
+kafa1Img.src = 'kafa1.png';
+const kafa2Img = new Image();
+kafa2Img.src = 'kafa2.png';
+
 const kafalar = [];
 const efektler = [];
 const parcaciklar = [];
@@ -129,7 +155,9 @@ function Kafa() {
   this.rotationSpeed = 0;
   this.prevX = 0;
   this.prevY = 0;
+  this.img = selectedKafa; // Seçilen kafa
 }
+
 Kafa.prototype.update = function () {
   if (!this.dragging) {
     this.x += this.vx;
@@ -171,7 +199,7 @@ Kafa.prototype.draw = function () {
   ctx.save();
   ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
   ctx.rotate(this.rotation);
-  ctx.drawImage(kafaImg, -this.size / 2, -this.size / 2, this.size, this.size);
+  ctx.drawImage(this.img, -this.size / 2, -this.size / 2, this.size, this.size);
   ctx.restore();
 };
 
@@ -179,6 +207,17 @@ function addKafa() {
   if (kafalar.length < 20) kafalar.push(new Kafa());
 }
 document.getElementById('addBtn').addEventListener('click', addKafa);
+
+// Kafa Seçimi
+document.getElementById('kafa1').addEventListener('click', function() {
+  selectedKafa = kafa1Img;
+  alert('Kafa 1 seçildi!');
+});
+
+document.getElementById('kafa2').addEventListener('click', function() {
+  selectedKafa = kafa2Img;
+  alert('Kafa 2 seçildi!');
+});
 
 let draggingKafa = null;
 let lastMouse = { x: 0, y: 0 };
@@ -209,6 +248,7 @@ function handleDown(e) {
     }
   }
 }
+
 function handleMove(e) {
   if (draggingKafa) {
     const pos = getMousePos(e);
@@ -305,7 +345,11 @@ function animate() {
   requestAnimationFrame(animate);
 }
 
-kafaImg.onload = function () {
+kafa1Img.onload = function () {
+  addKafa();
+  animate();
+};
+kafa2Img.onload = function () {
   addKafa();
   animate();
 };
