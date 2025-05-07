@@ -1,137 +1,149 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basketbol Oyunu</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #111;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            flex-direction: column;
-        }
-        #gameCanvas {
-            position: relative;
-            border: 1px solid white;
-            background-color: #222;
-            width: 500px;
-            height: 500px;
-        }
-        #basketball {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            cursor: pointer;
-        }
-        #indicator {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background-color: red;
-            border-radius: 50%;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Basketbol Modu</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #222;
+      touch-action: none;
+    }
+    canvas {
+      display: block;
+      background: #222;
+    }
+  </style>
 </head>
 <body>
-    <h1>Basketbol Topunu Fırlat</h1>
-    <div id="gameCanvas">
-        <img id="basketball" src="kafa1.png" alt="Basketball">
-        <div id="indicator"></div>
-    </div>
+  <canvas id="gameCanvas"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-    <script>
-        const basketball = document.getElementById('basketball');
-        const indicator = document.getElementById('indicator');
-        const canvas = document.getElementById('gameCanvas');
-        let dragging = false;
-        let startX, startY;
-        let direction = { x: 0, y: 0 };
-        let lastX, lastY;
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
 
-        // Sürükleme başlatma
-        basketball.addEventListener('mousedown', (e) => {
-            dragging = true;
-            startX = e.clientX;
-            startY = e.clientY;
-        });
+    const kafaImg = new Image();
+    let kafaId = localStorage.getItem("seciliKafa") || "1";
+    kafaImg.src = `kafa${kafaId}.png`;
 
-        // Sürükleme sırasında göstergeyi hareket ettir
-        document.addEventListener('mousemove', (e) => {
-            if (!dragging) return;
+    let kafa = {
+      x: width / 2,
+      y: height - 100,
+      radius: 40,
+      vx: 0,
+      vy: 0,
+      gravity: 0.5,
+      isDragging: false,
+      isFlying: false
+    };
 
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+    let dragStart = null;
+    let dragEnd = null;
 
-            // Çekilen mesafeye göre göstergeyi boyutlandır
-            indicator.style.width = `${Math.min(50, distance)}px`;
-            indicator.style.height = `${Math.min(50, distance)}px`;
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
 
-            // Çekilen yönün tersini alıyoruz
-            direction.x = -dx / distance;
-            direction.y = -dy / distance;
+      // Draw kafa
+      ctx.drawImage(kafaImg, kafa.x - kafa.radius, kafa.y - kafa.radius, kafa.radius * 2, kafa.radius * 2);
 
-            // Göstergeyi sürüklenen yere taşı
-            indicator.style.left = `${e.clientX - 5}px`;
-            indicator.style.top = `${e.clientY - 5}px`;
-        });
+      // Draw trajectory
+      if (kafa.isDragging && dragStart) {
+        ctx.fillStyle = "white";
+        const dx = dragStart.x - dragEnd.x;
+        const dy = dragStart.y - dragEnd.y;
+        for (let i = 0; i < 20; i++) {
+          let t = i * 2;
+          let px = kafa.x + dx * 0.1 * t;
+          let py = kafa.y + dy * 0.1 * t + 0.5 * kafa.gravity * t * t;
+          ctx.beginPath();
+          ctx.arc(px, py, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
 
-        // Sürükleme bitince topu fırlat
-        document.addEventListener('mouseup', () => {
-            if (!dragging) return;
-            dragging = false;
+    function update() {
+      if (kafa.isFlying) {
+        kafa.vy += kafa.gravity;
+        kafa.x += kafa.vx;
+        kafa.y += kafa.vy;
 
-            // Topu fırlatmak için hız hesaplaması
-            const xVelocity = direction.x * parseFloat(indicator.style.width);
-            const yVelocity = direction.y * parseFloat(indicator.style.height);
-
-            moveBasketball(xVelocity, yVelocity);
-        });
-
-        // Topu hareket ettir
-        function moveBasketball(xVelocity, yVelocity) {
-            let basketballX = parseFloat(basketball.style.left || 0);
-            let basketballY = parseFloat(basketball.style.top || 0);
-
-            function move() {
-                basketballX += xVelocity;
-                basketballY += yVelocity;
-
-                // Yerçekimi etkisi
-                yVelocity += 0.1;
-
-                // Ekranı terk etmesin
-                if (basketballX < 0 || basketballX > canvas.offsetWidth || basketballY > canvas.offsetHeight) {
-                    cancelAnimationFrame(animId);
-                    basketballX = 200;
-                    basketballY = 400;
-                    updateBasketball(basketballX, basketballY);
-                }
-
-                updateBasketball(basketballX, basketballY);
-                animId = requestAnimationFrame(move);
-            }
-
-            let animId = requestAnimationFrame(move);
+        // Basit yerden seken mantık
+        if (kafa.y + kafa.radius > height) {
+          kafa.y = height - kafa.radius;
+          kafa.vy *= -0.5;
+          kafa.vx *= 0.8;
         }
 
-        // Topun ve göstergenin yerini güncelle
-        function updateBasketball(x, y) {
-            basketball.style.left = `${x - 25}px`;  // Topun merkezi 50px
-            basketball.style.top = `${y - 25}px`;
+        // Kenarlara çarpınca sekme
+        if (kafa.x - kafa.radius < 0 || kafa.x + kafa.radius > width) {
+          kafa.vx *= -1;
+          kafa.x = Math.max(kafa.radius, Math.min(kafa.x, width - kafa.radius));
         }
+      }
 
-        // Başlangıç konumlarını ayarla
-        function setup() {
-            updateBasketball(200, 400);
-        }
+      draw();
+      requestAnimationFrame(update);
+    }
 
-        setup();
-    </script>
+    function getPointerPos(e) {
+      if (e.touches) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else {
+        return { x: e.clientX, y: e.clientY };
+      }
+    }
+
+    function onStart(e) {
+      const pos = getPointerPos(e);
+      if (
+        pos.x >= kafa.x - kafa.radius &&
+        pos.x <= kafa.x + kafa.radius &&
+        pos.y >= kafa.y - kafa.radius &&
+        pos.y <= kafa.y + kafa.radius
+      ) {
+        kafa.isDragging = true;
+        dragStart = pos;
+        dragEnd = pos;
+        kafa.isFlying = false;
+        kafa.vx = 0;
+        kafa.vy = 0;
+      }
+    }
+
+    function onMove(e) {
+      if (kafa.isDragging) {
+        dragEnd = getPointerPos(e);
+      }
+    }
+
+    function onEnd(e) {
+      if (kafa.isDragging) {
+        const dx = dragStart.x - dragEnd.x;
+        const dy = dragStart.y - dragEnd.y;
+        kafa.vx = dx * 0.15;
+        kafa.vy = dy * 0.15;
+        kafa.isFlying = true;
+        kafa.isDragging = false;
+      }
+    }
+
+    canvas.addEventListener("mousedown", onStart);
+    canvas.addEventListener("mousemove", onMove);
+    canvas.addEventListener("mouseup", onEnd);
+
+    canvas.addEventListener("touchstart", onStart);
+    canvas.addEventListener("touchmove", onMove);
+    canvas.addEventListener("touchend", onEnd);
+
+    update();
+  </script>
 </body>
 </html>
