@@ -1,143 +1,180 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Basketbol Modu</title>
+  <title>Kafa Basket</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    html, body {
+    * {
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
       overflow: hidden;
-      background: #111;
+      background: #222;
       touch-action: none;
     }
+
     canvas {
       display: block;
-      background: #111;
+      background-color: #333;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+<canvas id="gameCanvas"></canvas>
 
-    // Ekranı boyutlandır
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
+<script>
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
 
-    const seciliKafaId = localStorage.getItem("seciliKafa") || "1";
-    const kafaImg = new Image();
-    kafaImg.src = `kafa${seciliKafaId}.png`;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 
-    const kafa = {
-      x: canvas.width / 2,
-      y: canvas.height / 2,
-      vx: 0,
-      vy: 0,
-      radius: 40,
-      isDragging: false,
-      launched: false
-    };
+  const kafaImage = new Image();
+  const seciliKafaId = localStorage.getItem("seciliKafa") || "1";
+  kafaImage.src = `kafa${seciliKafaId}.png`;
 
-    let dragStart = null;
+  let kafa = {
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    radius: 40,
+    vx: 0,
+    vy: 0,
+    isDragging: false,
+    dragStartX: 0,
+    dragStartY: 0,
+    gravity: 0.6,
+    bounce: -0.7
+  };
 
-    canvas.addEventListener("pointerdown", (e) => {
-      const dx = e.clientX - kafa.x;
-      const dy = e.clientY - kafa.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+  // Noktalı gösterge için
+  let showTrajectory = false;
+  let trajectoryPoints = [];
 
-      if (distance < kafa.radius) {
-        kafa.isDragging = true;
-        dragStart = { x: e.clientX, y: e.clientY };
-      }
-    });
-
-    canvas.addEventListener("pointermove", (e) => {
-      if (kafa.isDragging) {
-        dragStart.currentX = e.clientX;
-        dragStart.currentY = e.clientY;
-      }
-    });
-
-    canvas.addEventListener("pointerup", (e) => {
-      if (kafa.isDragging) {
-        let dx = dragStart.x - e.clientX;
-        let dy = dragStart.y - e.clientY;
-
-        const maxPower = 150;
-        const distance = Math.min(Math.hypot(dx, dy), maxPower);
-        const angle = Math.atan2(dy, dx);
-
-        kafa.vx = (distance * Math.cos(angle)) / 10;
-        kafa.vy = (distance * Math.sin(angle)) / 10;
-        kafa.launched = true;
-        kafa.isDragging = false;
-        dragStart = null;
-      }
-    });
-
-    function update() {
-      if (!kafa.isDragging) {
-        kafa.vy += 0.5; // yerçekimi
-        kafa.x += kafa.vx;
-        kafa.y += kafa.vy;
-
-        // Kenarlardan sekme
-        if (kafa.x - kafa.radius < 0 || kafa.x + kafa.radius > canvas.width) {
-          kafa.vx *= -1;
-          kafa.x = Math.max(kafa.radius, Math.min(canvas.width - kafa.radius, kafa.x));
-        }
-        if (kafa.y - kafa.radius < 0 || kafa.y + kafa.radius > canvas.height) {
-          kafa.vy *= -1;
-          kafa.y = Math.max(kafa.radius, Math.min(canvas.height - kafa.radius, kafa.y));
-        }
-      }
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Göstergeler (drag sırasında)
-      if (kafa.isDragging && dragStart) {
-        const dx = dragStart.x - dragStart.currentX;
-        const dy = dragStart.y - dragStart.currentY;
-        const length = Math.min(Math.hypot(dx, dy), 150);
-        const angle = Math.atan2(dy, dx);
-
-        for (let i = 0; i < 10; i++) {
-          const dotX = kafa.x + Math.cos(angle) * i * 10;
-          const dotY = kafa.y + Math.sin(angle) * i * 10;
-          ctx.beginPath();
-          ctx.arc(dotX, dotY, 3, 0, Math.PI * 2);
-          ctx.fillStyle = "white";
-          ctx.fill();
-        }
-      }
-
-      // Kafa görseli
+  function drawKafa() {
+    if (kafaImage.complete) {
       ctx.drawImage(
-        kafaImg,
+        kafaImage,
         kafa.x - kafa.radius,
         kafa.y - kafa.radius,
         kafa.radius * 2,
         kafa.radius * 2
       );
+    } else {
+      ctx.beginPath();
+      ctx.arc(kafa.x, kafa.y, kafa.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+    }
+  }
+
+  function drawTrajectory() {
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    trajectoryPoints.forEach((p) => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  function calculateTrajectory(dx, dy) {
+    trajectoryPoints = [];
+    let x = kafa.x;
+    let y = kafa.y;
+    let vx = dx * 0.2;
+    let vy = dy * 0.2;
+    for (let i = 0; i < 30; i++) {
+      x += vx;
+      y += vy;
+      vy += kafa.gravity;
+      trajectoryPoints.push({ x, y });
+    }
+  }
+
+  function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Yerçekimi
+    if (!kafa.isDragging) {
+      kafa.vy += kafa.gravity;
+      kafa.x += kafa.vx;
+      kafa.y += kafa.vy;
+
+      // Kenarlardan sekme
+      if (kafa.x - kafa.radius < 0) {
+        kafa.x = kafa.radius;
+        kafa.vx *= kafa.bounce;
+      } else if (kafa.x + kafa.radius > canvas.width) {
+        kafa.x = canvas.width - kafa.radius;
+        kafa.vx *= kafa.bounce;
+      }
+
+      if (kafa.y - kafa.radius < 0) {
+        kafa.y = kafa.radius;
+        kafa.vy *= kafa.bounce;
+      } else if (kafa.y + kafa.radius > canvas.height) {
+        kafa.y = canvas.height - kafa.radius;
+        kafa.vy *= kafa.bounce;
+      }
     }
 
-    function loop() {
-      update();
-      draw();
-      requestAnimationFrame(loop);
-    }
+    if (showTrajectory) drawTrajectory();
+    drawKafa();
+    requestAnimationFrame(gameLoop);
+  }
 
-    loop();
-  </script>
+  function onStart(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    const dx = x - kafa.x;
+    const dy = y - kafa.y;
+    if (Math.sqrt(dx * dx + dy * dy) < kafa.radius) {
+      kafa.isDragging = true;
+      kafa.dragStartX = x;
+      kafa.dragStartY = y;
+      showTrajectory = true;
+    }
+  }
+
+  function onMove(e) {
+    if (!kafa.isDragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    const dx = kafa.dragStartX - x;
+    const dy = kafa.dragStartY - y;
+    calculateTrajectory(dx, dy);
+  }
+
+  function onEnd(e) {
+    if (!kafa.isDragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX) - rect.left;
+    const y = (e.changedTouches ? e.changedTouches[0].clientY : e.clientY) - rect.top;
+    const dx = kafa.dragStartX - x;
+    const dy = kafa.dragStartY - y;
+    kafa.vx = dx * 0.2;
+    kafa.vy = dy * 0.2;
+    kafa.isDragging = false;
+    showTrajectory = false;
+  }
+
+  canvas.addEventListener("mousedown", onStart);
+  canvas.addEventListener("mousemove", onMove);
+  canvas.addEventListener("mouseup", onEnd);
+
+  canvas.addEventListener("touchstart", onStart);
+  canvas.addEventListener("touchmove", onMove);
+  canvas.addEventListener("touchend", onEnd);
+
+  gameLoop();
+</script>
 </body>
 </html>
