@@ -16,7 +16,7 @@
       font-family: sans-serif;
       flex-direction: column;
       overflow: hidden;
-      overflow-x: hidden; /* Sağ/sol kaymayı engeller */
+      overflow-x: hidden;
     }
     canvas {
       border: 2px solid white;
@@ -48,12 +48,15 @@
     const ctx = canvas.getContext('2d');
     let width, height;
     let score = 0;
-    let failedAttempts = 0;
 
     // Kafa seçimi için localStorage'dan okuma
     const selectedKafaId = localStorage.getItem('seciliKafa');
     const kafaImg = new Image();
     kafaImg.src = `kafa${selectedKafaId}.png`; // seçilen kafa resmini yükle
+
+    // Potanın görseli
+    const basketImg = new Image();
+    basketImg.src = 'pota.png'; // Potayı buradan yükle (pota görselinin dosya ismi ve yolu)
 
     // Canvas boyutları
     function resize() {
@@ -85,137 +88,101 @@
     // Basketbol potası
     let basket = {
       x: Math.random() * (width - 120),
-      y: Math.random() * (height / 2 - 100) + 50,
+      y: Math.random() * (height / 2), // Potayı ekrana yerleştirme
       width: 100,
-      height: 20
+      height: 50
     };
 
-    // Çekiş göstergesi
-    let pull = {
-      x: width / 2,
-      y: height - 50,
-      length: 0,
-      angle: 0,
-      pulling: false
-    };
+    // Oyun döngüsü
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Oyun başladığında
-    function startGame() {
-      score = 0;
-      failedAttempts = 0;
-      kafa.x = width / 2;
-      kafa.y = height - 50;
-      kafa.speedX = 0;
-      kafa.speedY = 0;
-      basket.x = Math.random() * (width - 120);
-      basket.y = Math.random() * (height / 2 - 100) + 50;
-      pull.length = 0;
-      animate();
-    }
+      // Potayı çizme
+      ctx.drawImage(basketImg, basket.x, basket.y, basket.width, basket.height);
 
-    // Oyun animasyonu
-    function animate() {
-      ctx.clearRect(0, 0, width, height);
+      // Kafayı (topu) çizme
+      ctx.drawImage(kafaImg, kafa.x - kafa.radius, kafa.y - kafa.radius, kafa.radius * 2, kafa.radius * 2);
 
-      // Kafa çizimi
-      ctx.drawImage(kafaImg, kafa.x - kafa.radius, kafa.y - kafa.radius, kafa.radius * 2, kafa.radius * 2); // Kafayı çiz
-
-      // Kafa hareketi
+      // Kafayı hareket ettirme
       kafa.y += kafa.speedY;
-      kafa.x += kafa.speedX;
+      kafa.speedY += kafa.gravity; // Yerçekimi etkisi
 
-      // Yerçekimi ve zıplama
-      if (kafa.y + kafa.radius > height) {
-        kafa.speedY *= -kafa.bounce;
+      // Yere çarptığında sekmesi
+      if (kafa.y + kafa.radius >= height) {
         kafa.y = height - kafa.radius;
+        kafa.speedY = -kafa.speedY * kafa.bounce;
       }
 
-      // Potaya çarpma
-      if (kafa.x + kafa.radius > basket.x && kafa.x - kafa.radius < basket.x + basket.width && kafa.y + kafa.radius > basket.y) {
-        score++;
-        document.getElementById('score').textContent = 'Skor: ' + score;
-        resetBall();
-        resetBasket();
+      // Basket kontrolü
+      if (kafa.y + kafa.radius >= basket.y && kafa.y - kafa.radius <= basket.y + basket.height &&
+          kafa.x + kafa.radius >= basket.x && kafa.x - kafa.radius <= basket.x + basket.width) {
+        score += 1;
+        document.getElementById('score').innerText = 'Skor: ' + score;
+        resetBall(); // Basket olduğunda topu sıfırla
       }
 
-      // Kafa sınırları
-      if (kafa.x - kafa.radius < 0 || kafa.x + kafa.radius > width) {
-        kafa.speedX *= -1;
-      }
-
-      // Kafa hızlandırma
-      kafa.speedY += kafa.gravity;
-
-      // Çekiş gösterge çizimi
-      if (pull.pulling) {
-        ctx.beginPath();
-        ctx.moveTo(kafa.x, kafa.y);
-        ctx.lineTo(pull.x, pull.y);
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 3]);
-        ctx.stroke();
-      }
-
-      requestAnimationFrame(animate);
+      requestAnimationFrame(gameLoop);
     }
 
-    // Kafayı sıfırlama
+    // Topu sıfırlamak
     function resetBall() {
       kafa.x = width / 2;
       kafa.y = height - 50;
-      kafa.speedX = 0;
       kafa.speedY = 0;
     }
 
-    // Potayı rastgele yerleştir
-    function resetBasket() {
-      basket.x = Math.random() * (width - 120);
-      basket.y = Math.random() * (height / 2 - 100) + 50;
-    }
-
-    // Çekiş başlatma
-    canvas.addEventListener('mousedown', (e) => {
-      pull.pulling = true;
-      pull.x = e.clientX;
-      pull.y = e.clientY;
-    });
-
-    // Çekişi bırakma
-    canvas.addEventListener('mouseup', () => {
-      if (pull.pulling) {
-        let angle = Math.atan2(pull.y - kafa.y, pull.x - kafa.x);
-        let distance = Math.min(pull.length, 150);
-        kafa.speedX = Math.cos(angle) * distance / 5;
-        kafa.speedY = Math.sin(angle) * distance / 5;
-        pull.pulling = false;
-        pull.length = 0;
-
-        // Eğer 3 kez basket kaçırdıysak oyun sonlanacak
-        failedAttempts++;
-        if (failedAttempts >= 3) {
-          alert("Oyun bitti! Skor: " + score);
-          window.location.href = "index.html"; // Geri dön
-        }
-      }
-    });
-
-    // Çekiş boyunca göstergeyi güncelleme
-    canvas.addEventListener('mousemove', (e) => {
-      if (pull.pulling) {
-        let dx = e.clientX - kafa.x;
-        let dy = e.clientY - kafa.y;
-        pull.length = Math.sqrt(dx * dx + dy * dy);
-        pull.angle = Math.atan2(dy, dx);
-      }
-    });
-
-    // Geri gitme
+    // Geri butonu
     function goBack() {
-      window.location.href = 'index.html'; // Geri gitme butonu
+      window.location.href = 'index.html';
     }
 
-    startGame();
+    // Sürükleme işlemleri
+    let dragging = false;
+    let startX, startY;
+
+    canvas.addEventListener('mousedown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      startY = e.clientY - rect.top;
+
+      // Eğer kafaya tıklanmışsa, sürükleme başlat
+      if (Math.sqrt(Math.pow(startX - kafa.x, 2) + Math.pow(startY - kafa.y, 2)) < kafa.radius) {
+        dragging = true;
+      }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (dragging) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Kafayı yeni pozisyona taşı
+        kafa.x = x;
+        kafa.y = y;
+      }
+    });
+
+    canvas.addEventListener('mouseup', (e) => {
+      if (dragging) {
+        dragging = false;
+
+        // Topu fırlat
+        const endX = e.clientX - canvas.getBoundingClientRect().left;
+        const endY = e.clientY - canvas.getBoundingClientRect().top;
+
+        // Fırlatma yönü ve gücü hesapla
+        const directionX = (endX - kafa.x) / 10;
+        const directionY = (endY - kafa.y) / 10;
+
+        kafa.speedX = directionX;
+        kafa.speedY = directionY;
+
+        // Yönü ve hızıyla topu fırlat
+      }
+    });
+
+    gameLoop(); // Oyunu başlat
   </script>
 
 </body>
