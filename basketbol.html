@@ -18,6 +18,7 @@
         #gameCanvas {
             border: 1px solid white;
             background-color: #222;
+            position: relative;
         }
         #basketball {
             position: absolute;
@@ -32,25 +33,25 @@
             background-color: red;
             border-radius: 50%;
         }
-        #score {
+        #score, #attempts {
             position: absolute;
+            font-size: 24px;
+            color: white;
+            z-index: 10;
+        }
+        #score {
             top: 20px;
             left: 20px;
-            font-size: 24px;
-            color: white;
         }
         #attempts {
-            position: absolute;
             top: 20px;
             right: 20px;
-            font-size: 24px;
-            color: white;
         }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="500" height="500"></canvas>
-    <img id="basketball" src="kafa1.png" alt="Basketball" />
+    <img id="basketball" src="kafa1.png" alt="Basketball">
     <div id="indicator"></div>
     <div id="score">Skor: 0</div>
     <div id="attempts">Atış Hakkı: 3</div>
