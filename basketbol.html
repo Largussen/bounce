@@ -39,6 +39,13 @@
             font-size: 24px;
             color: white;
         }
+        #attempts {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -46,6 +53,7 @@
     <img id="basketball" src="kafa1.png" alt="Basketball" />
     <div id="indicator"></div>
     <div id="score">Skor: 0</div>
+    <div id="attempts">Atış Hakkı: 3</div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -53,17 +61,18 @@
         const basketball = document.getElementById('basketball');
         const indicator = document.getElementById('indicator');
         const scoreElement = document.getElementById('score');
+        const attemptsElement = document.getElementById('attempts');
 
         let score = 0;
+        let attempts = 3;
         let dragging = false;
         let startX, startY;
         let lastX, lastY;
         let direction = { x: 0, y: 0 };
+        let ballX = 200, ballY = 400;
+        let hoop = { x: 400, y: 150, width: 100, height: 20 };
 
         // Basket potası (static bir pota yerleştiriyoruz)
-        const hoop = { x: 400, y: 150, width: 100, height: 20 };
-
-        // Basket potasını çizmek
         function drawHoop() {
             ctx.fillStyle = '#FF6347';
             ctx.fillRect(hoop.x, hoop.y, hoop.width, hoop.height);
@@ -81,6 +90,7 @@
 
         // Kullanıcı topu sürüklüyor
         basketball.addEventListener('mousedown', (e) => {
+            if (attempts <= 0) return;  // Atış hakkı bittiğinde durdur
             dragging = true;
             startX = e.clientX;
             startY = e.clientY;
@@ -95,7 +105,7 @@
 
             // Göstergeyi çekilen mesafeye göre hareket ettir
             indicator.style.width = `${Math.min(50, distance)}px`;  // Mesafeye göre gösterge uzunluğu
-            indicator.style.height = `${Math.min(50, distance)}px`; 
+            indicator.style.height = `${Math.min(50, distance)}px`;
 
             // Çekilen yönün tersini alıyoruz
             direction.x = -dx / distance;
@@ -110,11 +120,11 @@
             if (!dragging) return;
             dragging = false;
 
-            // Topu fırlat
+            // Atış yapıldığında, topu fırlat
             let xVelocity = direction.x * parseFloat(indicator.style.width);
             let yVelocity = direction.y * parseFloat(indicator.style.height);
 
-            // Topun hareketini başlat
+            // Topu hareket ettir
             moveBasketball(xVelocity, yVelocity);
         });
 
@@ -137,6 +147,7 @@
                     basketballY = 400;
                     updateBasketball(basketballX, basketballY);
                     scoreElement.innerText = `Skor: ${score}`;
+                    attemptsElement.innerText = `Atış Hakkı: ${attempts}`;
                 }
 
                 // Pota ile çarpma
@@ -146,6 +157,15 @@
                     basketballY = 400;
                     updateBasketball(basketballX, basketballY);
                     scoreElement.innerText = `Skor: ${score}`;
+                }
+
+                // Atış hakları
+                if (basketballY > canvas.height) {
+                    attempts--;
+                    attemptsElement.innerText = `Atış Hakkı: ${attempts}`;
+                    basketballX = 200;
+                    basketballY = 400;
+                    updateBasketball(basketballX, basketballY);
                 }
 
                 updateBasketball(basketballX, basketballY);
