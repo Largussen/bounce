@@ -28,8 +28,24 @@
       position: absolute;
     }
 
-    .kafa {
+    .kafa-container {
       position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 200px;
+      height: 100px;
+      padding: 10px;
+      border: 2px solid #fff;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .kafa {
+      width: 50px;
+      height: 50px;
       cursor: pointer;
       transition: transform 0.3s;
     }
@@ -38,11 +54,26 @@
       transform: scale(1.2);
       border: 2px solid #ff6700;
     }
+
+    .kafa-container::before {
+      content: "Kafa Seç";
+      color: white;
+      position: absolute;
+      top: -30px;
+      font-size: 18px;
+    }
+
   </style>
 </head>
 <body>
 
 <canvas id="gameCanvas"></canvas>
+
+<div class="kafa-container">
+  <img src="kafa1.png" class="kafa" id="kafa1">
+  <img src="kafa2.png" class="kafa" id="kafa2">
+  <img src="kafa3.png" class="kafa" id="kafa3">
+</div>
 
 <script>
   const canvas = document.getElementById("gameCanvas");
@@ -53,7 +84,7 @@
 
   const kafaImages = [];
   const totalKafalar = 3; // Seçilebilir kafaların sayısı
-  const maxBackgroundKafalar = 10; // Arka planda rastgele kayacak kafa sayısı
+  const maxBackgroundKafalar = 15; // Arka planda rastgele kayacak kafa sayısı
   const backgroundKafalar = [];
 
   // Kafa görsellerini yükleyelim
@@ -70,7 +101,7 @@
       image: kafaImages[randomKafaIndex],
       x: Math.random() * canvas.width,
       y: -50,  // Yatay konumdan önce yukarıda başlasın
-      speed: Math.random() * 1 + 0.5,  // Farklı hızlarla kayacak
+      speed: Math.random() * 2 + 1,  // Farklı hızlarla kayacak
     });
   }
 
