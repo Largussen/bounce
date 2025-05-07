@@ -16,14 +16,21 @@
       font-family: sans-serif;
       flex-direction: column;
       overflow: hidden; /* Sayfa kaymasını engeller */
+      position: relative;
     }
     canvas {
       border: 2px solid white;
       touch-action: none; /* Mobilde kayma engelleniyor */
+      position: absolute;
     }
     .score {
       font-size: 24px;
       margin-bottom: 20px;
+      z-index: 10;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-family: 'Arial', sans-serif;
     }
     .btn {
       padding: 10px 20px;
@@ -33,6 +40,17 @@
       border: none;
       border-radius: 10px;
       color: #111;
+      margin-top: 20px;
+      z-index: 10;
+    }
+    h1 {
+      font-size: 32px;
+      z-index: 10;
+      margin-top: 10px;
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
     }
   </style>
 </head>
