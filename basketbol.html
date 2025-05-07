@@ -24,14 +24,45 @@
       display: block;
       background-color: #333;
     }
+
+    .game-over {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 40px;
+      text-align: center;
+      display: none;
+    }
+
+    .game-over button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #f39c12;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .game-over button:hover {
+      background-color: #e67e22;
+    }
   </style>
 </head>
 <body>
-<canvas id="gameCanvas"></canvas>
+  <canvas id="gameCanvas"></canvas>
+  <div class="game-over" id="gameOverScreen">
+    <div>Game Over</div>
+    <button id="restartButton">Tekrar Başla</button>
+  </div>
 
 <script>
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
+  const gameOverScreen = document.getElementById("gameOverScreen");
+  const restartButton = document.getElementById("restartButton");
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -41,10 +72,12 @@
   kafaImage.src = `kafa${seciliKafaId}.png`;
 
   let score = 0;
+  let timeLeft = 5; // Başlangıçta 5 saniye süre verilecek
+  let countdownInterval;
 
   let kafa = {
     x: canvas.width / 2,
-    y: canvas.height - 150,  // Yüksekliği artırdık
+    y: canvas.height - 150,
     radius: 40,
     vx: 0,
     vy: 0,
@@ -104,9 +137,15 @@
     ctx.fillText("Skor: " + score, 20, 40);
   }
 
+  function drawTime() {
+    ctx.fillStyle = "#fff";
+    ctx.font = "24px sans-serif";
+    ctx.fillText("Kalan Süre: " + timeLeft, canvas.width - 150, 40);
+  }
+
   function drawGround() {
-    ctx.fillStyle = "#444"; // Zemin rengi
-    ctx.fillRect(0, canvas.height - 100, canvas.width, 100); // Zemini daha yukarı taşıdık
+    ctx.fillStyle = "#444"; 
+    ctx.fillRect(0, canvas.height - 100, canvas.width, 100); 
   }
 
   function calculateTrajectory(dx, dy) {
@@ -132,12 +171,27 @@
       score++;
       resetKafa();
       randomizePota();
+      resetTime(); // Süreyi sıfırla
+    }
+  }
+
+  function resetTime() {
+    clearInterval(countdownInterval);
+    timeLeft = 5 - score * 0.5; // Skor arttıkça süre azalacak
+    if (timeLeft < 2) timeLeft = 2; // Süre 2 saniyenin altına inmemeli
+    countdownInterval = setInterval(decreaseTime, 1000);
+  }
+
+  function decreaseTime() {
+    timeLeft--;
+    if (timeLeft <= 0) {
+      gameOver(); // Süre bitince Game Over
     }
   }
 
   function resetKafa() {
     kafa.x = canvas.width / 2;
-    kafa.y = canvas.height - 150;  // Yüksekliği artırdık
+    kafa.y = canvas.height - 150;
     kafa.vx = 0;
     kafa.vy = 0;
   }
@@ -147,6 +201,23 @@
     pota.y = Math.random() * (canvas.height / 2) + 50;
   }
 
+  function gameOver() {
+    clearInterval(countdownInterval); // Zaman sayacını durdur
+    gameOverScreen.style.display = "block"; // Game Over ekranını göster
+  }
+
+  function restartGame() {
+    score = 0;
+    timeLeft = 5;
+    gameOverScreen.style.display = "none"; // Game Over ekranını gizle
+    resetKafa();
+    randomizePota();
+    resetTime(); // Süreyi sıfırla ve başlat
+    gameLoop(); // Oyunu yeniden başlat
+  }
+
+  restartButton.addEventListener("click", restartGame);
+
   function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -155,7 +226,6 @@
       kafa.x += kafa.vx;
       kafa.y += kafa.vy;
 
-      // Kenarlardan sekme
       if (kafa.x - kafa.radius < 0) {
         kafa.x = kafa.radius;
         kafa.vx *= kafa.bounce;
@@ -167,17 +237,18 @@
       if (kafa.y - kafa.radius < 0) {
         kafa.y = kafa.radius;
         kafa.vy *= kafa.bounce;
-      } else if (kafa.y + kafa.radius > canvas.height - 100) { // Zeminle çarpma yüksekliğini artırdık
-        kafa.y = canvas.height - 100 - kafa.radius; // Zeminle çarpma
+      } else if (kafa.y + kafa.radius > canvas.height - 100) {
+        kafa.y = canvas.height - 100 - kafa.radius;
         kafa.vy *= kafa.bounce;
       }
 
       checkBasket();
     }
 
-    drawGround(); // Zemin çizimi
+    drawGround(); 
     drawPota();
     drawScore();
+    drawTime();  // Kalan süreyi ekranda göster
     if (showTrajectory) drawTrajectory();
     drawKafa();
     requestAnimationFrame(gameLoop);
@@ -223,12 +294,12 @@
   canvas.addEventListener("mousedown", onStart);
   canvas.addEventListener("mousemove", onMove);
   canvas.addEventListener("mouseup", onEnd);
-
   canvas.addEventListener("touchstart", onStart);
   canvas.addEventListener("touchmove", onMove);
   canvas.addEventListener("touchend", onEnd);
 
   gameLoop();
+  resetTime(); // Oyunu başlat
 </script>
 </body>
 </html>
