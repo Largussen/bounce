@@ -68,16 +68,16 @@
       cursor: pointer;
       animation: shake 1s infinite alternate;
       transition: transform 0.3s ease-in-out;
-      position: relative; /* Kafaların doğru konumlanması için */
+      position: relative;
     }
 
     .kafa:hover {
       transform: scale(1.2);
     }
 
-    /* Kafaların altındaki yazı */
+    /* Kafaların altındaki yazılar sadece hover olduğunda görünsün */
     .kafa-text {
-      display: block;
+      display: none; /* Başlangıçta gizle */
       position: absolute;
       bottom: -35px; /* Yazı ve kafa arasındaki mesafeyi ayarladım */
       width: 100px;
@@ -87,6 +87,10 @@
       font-weight: bold;
       transform-origin: center top;
       animation: rotateText 5s linear infinite;
+    }
+
+    .kafa:hover .kafa-text {
+      display: block; /* Kafa üzerine gelindiğinde yazıyı göster */
     }
 
     @keyframes rotateText {
