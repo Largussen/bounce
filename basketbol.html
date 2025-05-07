@@ -1,24 +1,34 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>Kafa Fırlatma Oyunu</title>
+  <meta charset="UTF-8" />
+  <title>Kafa Basket</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    html, body {
+    * {
       margin: 0;
       padding: 0;
-      overflow: hidden;
-      background: linear-gradient(to top, #444, #111);
+      box-sizing: border-box;
+      user-select: none;
     }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #222;
+      touch-action: none;
+    }
+
     canvas {
       display: block;
-      touch-action: none;
+      background-color: #333;
     }
   </style>
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
+
 <script>
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
@@ -26,138 +36,193 @@
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  // Seçilen kafa resmi
-  const kafaImg = new Image();
-  const seciliKafa = localStorage.getItem('seciliKafa') || "1";
-  kafaImg.src = `kafa${seciliKafa}.png`;
+  const kafaImage = new Image();
+  const seciliKafaId = localStorage.getItem("seciliKafa") || "1";
+  kafaImage.src = `kafa${seciliKafaId}.png`;
 
-  const kafa = {
+  let score = 0;
+
+  let kafa = {
     x: canvas.width / 2,
-    y: canvas.height - 150,
+    y: canvas.height - 100,
     radius: 40,
     vx: 0,
     vy: 0,
-    gravity: 0.5,
-    bounce: 0.7
+    isDragging: false,
+    dragStartX: 0,
+    dragStartY: 0,
+    gravity: 0.6,
+    bounce: -0.7
   };
 
-  let isDragging = false;
-  let dragStart = { x: 0, y: 0 };
-  let dragEnd = { x: 0, y: 0 };
-  let showIndicator = false;
+  let pota = {
+    x: Math.random() * (canvas.width - 100) + 50,
+    y: Math.random() * (canvas.height / 2) + 50,
+    radius: 50
+  };
 
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  let showTrajectory = false;
+  let trajectoryPoints = [];
 
-    // Zemin çiz
-    ctx.fillStyle = "#222";
-    ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
-
-    // Gösterge
-    if (showIndicator) {
-      const dx = dragStart.x - dragEnd.x;
-      const dy = dragStart.y - dragEnd.y;
-      const steps = 10;
-      ctx.fillStyle = "white";
-      for (let i = 1; i <= steps; i++) {
-        const dotX = kafa.x + (dx / steps) * i;
-        const dotY = kafa.y + (dy / steps) * i;
-        ctx.beginPath();
-        ctx.arc(dotX, dotY, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // Kafa çiz
-    if (kafaImg.complete) {
-      ctx.drawImage(kafaImg, kafa.x - kafa.radius, kafa.y - kafa.radius, kafa.radius * 2, kafa.radius * 2);
+  function drawKafa() {
+    if (kafaImage.complete) {
+      ctx.drawImage(
+        kafaImage,
+        kafa.x - kafa.radius,
+        kafa.y - kafa.radius,
+        kafa.radius * 2,
+        kafa.radius * 2
+      );
     } else {
-      ctx.fillStyle = "white";
       ctx.beginPath();
       ctx.arc(kafa.x, kafa.y, kafa.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "#fff";
       ctx.fill();
     }
   }
 
-  function update() {
-    if (!isDragging) {
+  function drawTrajectory() {
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    trajectoryPoints.forEach((p) => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  function drawPota() {
+    ctx.beginPath();
+    ctx.arc(pota.x, pota.y, pota.radius, 0, Math.PI * 2);
+    ctx.strokeStyle = "orange";
+    ctx.lineWidth = 5;
+    ctx.stroke();
+  }
+
+  function drawScore() {
+    ctx.fillStyle = "#fff";
+    ctx.font = "24px sans-serif";
+    ctx.fillText("Skor: " + score, 20, 40);
+  }
+
+  function calculateTrajectory(dx, dy) {
+    trajectoryPoints = [];
+    let x = kafa.x;
+    let y = kafa.y;
+    let vx = dx * 0.2;
+    let vy = dy * 0.2;
+    for (let i = 0; i < 30; i++) {
+      x += vx;
+      y += vy;
+      vy += kafa.gravity;
+      trajectoryPoints.push({ x, y });
+    }
+  }
+
+  function checkBasket() {
+    const dx = kafa.x - pota.x;
+    const dy = kafa.y - pota.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < pota.radius - kafa.radius / 2) {
+      score++;
+      resetKafa();
+      randomizePota();
+    }
+  }
+
+  function resetKafa() {
+    kafa.x = canvas.width / 2;
+    kafa.y = canvas.height - 100;
+    kafa.vx = 0;
+    kafa.vy = 0;
+  }
+
+  function randomizePota() {
+    pota.x = Math.random() * (canvas.width - 100) + 50;
+    pota.y = Math.random() * (canvas.height / 2) + 50;
+  }
+
+  function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!kafa.isDragging) {
       kafa.vy += kafa.gravity;
       kafa.x += kafa.vx;
       kafa.y += kafa.vy;
 
       // Kenarlardan sekme
-      if (kafa.x - kafa.radius < 0 || kafa.x + kafa.radius > canvas.width) {
-        kafa.vx *= -1;
-        kafa.x = Math.max(kafa.radius, Math.min(canvas.width - kafa.radius, kafa.x));
+      if (kafa.x - kafa.radius < 0) {
+        kafa.x = kafa.radius;
+        kafa.vx *= kafa.bounce;
+      } else if (kafa.x + kafa.radius > canvas.width) {
+        kafa.x = canvas.width - kafa.radius;
+        kafa.vx *= kafa.bounce;
       }
 
-      // Zeminden sekme
-      if (kafa.y + kafa.radius > canvas.height - 50) {
-        kafa.y = canvas.height - 50 - kafa.radius;
-        kafa.vy *= -kafa.bounce;
-      }
-
-      // Tavandan sekme
       if (kafa.y - kafa.radius < 0) {
         kafa.y = kafa.radius;
-        kafa.vy *= -kafa.bounce;
+        kafa.vy *= kafa.bounce;
+      } else if (kafa.y + kafa.radius > canvas.height) {
+        kafa.y = canvas.height - kafa.radius;
+        kafa.vy *= kafa.bounce;
       }
+
+      checkBasket();
     }
 
-    draw();
-    requestAnimationFrame(update);
+    drawPota();
+    drawScore();
+    if (showTrajectory) drawTrajectory();
+    drawKafa();
+    requestAnimationFrame(gameLoop);
   }
 
-  function startDrag(x, y) {
-    if (
-      x > kafa.x - kafa.radius &&
-      x < kafa.x + kafa.radius &&
-      y > kafa.y - kafa.radius &&
-      y < kafa.y + kafa.radius
-    ) {
-      isDragging = true;
-      dragStart = { x, y };
-      dragEnd = { x, y };
-      kafa.vx = 0;
-      kafa.vy = 0;
-      showIndicator = true;
-    }
-  }
-
-  function duringDrag(x, y) {
-    if (isDragging) {
-      dragEnd = { x, y };
+  function onStart(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    const dx = x - kafa.x;
+    const dy = y - kafa.y;
+    if (Math.sqrt(dx * dx + dy * dy) < kafa.radius) {
+      kafa.isDragging = true;
+      kafa.dragStartX = x;
+      kafa.dragStartY = y;
+      showTrajectory = true;
     }
   }
 
-  function endDrag() {
-    if (isDragging) {
-      const dx = dragStart.x - dragEnd.x;
-      const dy = dragStart.y - dragEnd.y;
-      kafa.vx = dx * 0.2;
-      kafa.vy = dy * 0.2;
-    }
-    isDragging = false;
-    showIndicator = false;
+  function onMove(e) {
+    if (!kafa.isDragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    const dx = kafa.dragStartX - x;
+    const dy = kafa.dragStartY - y;
+    calculateTrajectory(dx, dy);
   }
 
-  canvas.addEventListener("mousedown", e => startDrag(e.clientX, e.clientY));
-  canvas.addEventListener("mousemove", e => duringDrag(e.clientX, e.clientY));
-  canvas.addEventListener("mouseup", endDrag);
+  function onEnd(e) {
+    if (!kafa.isDragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX) - rect.left;
+    const y = (e.changedTouches ? e.changedTouches[0].clientY : e.clientY) - rect.top;
+    const dx = kafa.dragStartX - x;
+    const dy = kafa.dragStartY - y;
+    kafa.vx = dx * 0.2;
+    kafa.vy = dy * 0.2;
+    kafa.isDragging = false;
+    showTrajectory = false;
+  }
 
-  canvas.addEventListener("touchstart", e => {
-    const touch = e.touches[0];
-    startDrag(touch.clientX, touch.clientY);
-  });
+  canvas.addEventListener("mousedown", onStart);
+  canvas.addEventListener("mousemove", onMove);
+  canvas.addEventListener("mouseup", onEnd);
 
-  canvas.addEventListener("touchmove", e => {
-    const touch = e.touches[0];
-    duringDrag(touch.clientX, touch.clientY);
-  });
+  canvas.addEventListener("touchstart", onStart);
+  canvas.addEventListener("touchmove", onMove);
+  canvas.addEventListener("touchend", onEnd);
 
-  canvas.addEventListener("touchend", endDrag);
-
-  update();
+  gameLoop();
 </script>
 </body>
 </html>
