@@ -57,10 +57,9 @@
     /* Arka planda kayan kafalar */
     .moving-kafa {
       position: absolute;
-      top: -100px; /* Kafaların başlangıç yüksekliği */
       width: 80px;
       height: 80px;
-      animation: moveKafalar 10s linear infinite;
+      animation: moveKafalar linear infinite;
       opacity: 0.6;
     }
 
@@ -100,18 +99,21 @@
 
     // Kafaların arka planda rastgele kayması için fonksiyon
     function addMovingKafalar() {
-      for (let i = 0; i < 10; i++) { // 10 farklı kafa ekleyelim
-        const randomTop = Math.floor(Math.random() * window.innerHeight); // Yükseklik için rastgele değer
+      const numberOfKafalar = 10; // Arka planda kaç kafa kayacak
+      for (let i = 0; i < numberOfKafalar; i++) {
+        const randomTop = Math.floor(Math.random() * -200) - 100; // Yükseklik için rastgele değer
+        const randomLeft = Math.floor(Math.random() * window.innerWidth); // Ekranın genişliği boyunca rastgele bir pozisyon
         const randomDelay = Math.random() * 3 + "s"; // Rastgele animasyon gecikmesi
-        const randomDuration = Math.random() * 5 + 5 + "s"; // Rastgele animasyon süresi
-        
+        const randomDuration = Math.random() * 10 + 5 + "s"; // Rastgele animasyon süresi
+
         const movingKafa = document.createElement('img');
         movingKafa.src = `kafa${Math.floor(Math.random() * 3) + 1}.png`; // Rastgele kafa seçimi
         movingKafa.classList.add('moving-kafa');
         movingKafa.style.top = `${randomTop}px`;
+        movingKafa.style.left = `${randomLeft}px`;
         movingKafa.style.animationDuration = randomDuration;
         movingKafa.style.animationDelay = randomDelay;
-        
+
         document.body.appendChild(movingKafa);
       }
     }
