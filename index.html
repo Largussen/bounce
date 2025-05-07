@@ -34,10 +34,13 @@
 <canvas id="canvas"></canvas>
 <button id="addBtn">+</button>
 <audio id="bounceSound" src="bounce.mp3"></audio>
+<audio id="explosionSound" src="boom.mp3"></audio>
+
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let width, height;
+
 function resize() {
   const dpr = window.devicePixelRatio || 1;
   canvas.width = window.innerWidth * dpr;
@@ -56,13 +59,18 @@ const kafaImg = new Image();
 kafaImg.src = 'kafa.png';
 const kafalar = [];
 const efektler = [];
-const patlamalar = [];
+const parcaciklar = [];
 
 const bounceSound = document.getElementById('bounceSound');
-
 function playBounceSound(volume) {
   const sound = bounceSound.cloneNode();
-  sound.volume = Math.min(1, Math.max(0.2, volume));
+  sound.volume = volume;
+  sound.play();
+}
+const explosionSound = document.getElementById('explosionSound');
+function playExplosionSound() {
+  const sound = explosionSound.cloneNode();
+  sound.volume = 1;
   sound.play();
 }
 
@@ -91,7 +99,10 @@ function Parcacik(x, y) {
   this.vy = (Math.random() - 0.5) * 10;
   this.alpha = 1;
   this.size = Math.random() * 6 + 2;
-  this.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
+  const red = 255;
+  const green = Math.floor(Math.random() * 100);
+  const blue = 0;
+  this.color = `rgba(${red},${green},${blue},`;
 }
 Parcacik.prototype.update = function() {
   this.x += this.vx;
@@ -101,7 +112,7 @@ Parcacik.prototype.update = function() {
 Parcacik.prototype.draw = function() {
   ctx.beginPath();
   ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-  ctx.fillStyle = this.color.replace('70%', `${this.alpha * 100}%`);
+  ctx.fillStyle = this.color + this.alpha + ')';
   ctx.fill();
 };
 
@@ -128,36 +139,31 @@ Kafa.prototype.update = function () {
     this.vy *= 0.985;
     this.rotation += this.rotationSpeed;
     this.rotationSpeed *= 0.98;
-
     if (this.y + this.size > height) {
-      const impact = Math.abs(this.vy);
       this.y = height - this.size;
-      if (impact > 1.5) {
-        this.vy *= -0.55;
-        this.rotationSpeed = this.vx * 0.1;
-        efektler.push(new Efekt(this.x + this.size / 2, this.y + this.size));
-        playBounceSound(impact / 25);
-      } else {
+      if (Math.abs(this.vy) < 1.5) {
         this.vy = 0;
         this.vx *= 0.95;
         if (Math.abs(this.vx) < 0.2) this.vx = 0;
+      } else {
+        playBounceSound(Math.min(1, Math.abs(this.vy) / 20));
+        this.vy *= -0.55;
+        this.rotationSpeed = this.vx * 0.1;
+        efektler.push(new Efekt(this.x + this.size / 2, this.y + this.size));
       }
     }
-
     if (this.x < 0) {
-      const impact = Math.abs(this.vx);
       this.x = 0;
       this.vx *= -0.8;
       this.rotationSpeed = this.vy * 0.05;
+      playBounceSound(Math.min(1, Math.abs(this.vx) / 20));
       efektler.push(new Efekt(this.x, this.y + this.size / 2));
-      playBounceSound(impact / 25);
     } else if (this.x + this.size > width) {
-      const impact = Math.abs(this.vx);
       this.x = width - this.size;
       this.vx *= -0.8;
       this.rotationSpeed = this.vy * 0.05;
+      playBounceSound(Math.min(1, Math.abs(this.vx) / 20));
       efektler.push(new Efekt(this.x + this.size, this.y + this.size / 2));
-      playBounceSound(impact / 25);
     }
   }
 };
@@ -237,8 +243,9 @@ canvas.addEventListener('dblclick', function (e) {
       pos.x > k.x && pos.x < k.x + k.size &&
       pos.y > k.y && pos.y < k.y + k.size
     ) {
+      playExplosionSound();
       for (let j = 0; j < 25; j++) {
-        patlamalar.push(new Parcacik(k.x + k.size / 2, k.y + k.size / 2));
+        parcaciklar.push(new Parcacik(k.x + k.size / 2, k.y + k.size / 2));
       }
       kafalar.splice(i, 1);
       break;
@@ -284,10 +291,10 @@ function animate() {
     if (efektler[i].alpha <= 0) efektler.splice(i, 1);
   }
 
-  patlamalar.forEach(p => p.update());
-  patlamalar.forEach(p => p.draw());
-  for (let i = patlamalar.length - 1; i >= 0; i--) {
-    if (patlamalar[i].alpha <= 0) patlamalar.splice(i, 1);
+  parcaciklar.forEach(p => p.update());
+  parcaciklar.forEach(p => p.draw());
+  for (let i = parcaciklar.length - 1; i >= 0; i--) {
+    if (parcaciklar[i].alpha <= 0) parcaciklar.splice(i, 1);
   }
 
   kafalar.forEach(k => {
@@ -297,6 +304,7 @@ function animate() {
 
   requestAnimationFrame(animate);
 }
+
 kafaImg.onload = function () {
   addKafa();
   animate();
