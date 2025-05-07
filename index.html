@@ -33,9 +33,7 @@
 <body>
 <canvas id="canvas"></canvas>
 <button id="addBtn">+</button>
-
-<!-- Ses dosyasını buraya ekliyoruz -->
-<audio id="bounceSound" src="https://largussen.github.io/bounce/bounce.mp3" preload="auto"></audio>
+<audio id="bounceSound" src="https://raw.githubusercontent.com/largussen/bounce/main/bounce.mp3" preload="auto"></audio>
 
 <script>
 const canvas = document.getElementById('canvas');
@@ -57,9 +55,17 @@ window.addEventListener('resize', resize);
 resize();
 
 const kafaImg = new Image();
-kafaImg.src = 'kafa.png'; // Görsel yolu
+kafaImg.src = 'kafa.png';
 const kafalar = [];
 const efektler = [];
+
+const bounceSound = document.getElementById('bounceSound');
+function playBounceSound(velocity) {
+  const volume = Math.min(Math.max(Math.abs(velocity) / 20, 0.25), 1);
+  bounceSound.volume = volume;
+  bounceSound.currentTime = 0;
+  bounceSound.play();
+}
 
 function Efekt(x, y) {
   this.x = x;
@@ -90,10 +96,7 @@ function Kafa() {
   this.offsetY = 0;
   this.rotation = 0;
   this.rotationSpeed = 0;
-  this.prevX = 0;
-  this.prevY = 0;
 }
-
 Kafa.prototype.update = function () {
   if (!this.dragging) {
     this.x += this.vx;
@@ -103,6 +106,7 @@ Kafa.prototype.update = function () {
     this.vy *= 0.985;
     this.rotation += this.rotationSpeed;
     this.rotationSpeed *= 0.98;
+
     if (this.y + this.size > height) {
       this.y = height - this.size;
       if (Math.abs(this.vy) < 1.5) {
@@ -113,26 +117,25 @@ Kafa.prototype.update = function () {
         this.vy *= -0.55;
         this.rotationSpeed = this.vx * 0.1;
         efektler.push(new Efekt(this.x + this.size / 2, this.y + this.size));
-        // Çarpışma anında ses çal
-        const bounceSound = document.getElementById('bounceSound');
-        bounceSound.currentTime = 0;
-        bounceSound.play();
+        playBounceSound(this.vy);
       }
     }
+
     if (this.x < 0) {
       this.x = 0;
       this.vx *= -0.8;
       this.rotationSpeed = this.vy * 0.05;
       efektler.push(new Efekt(this.x, this.y + this.size / 2));
+      playBounceSound(this.vx);
     } else if (this.x + this.size > width) {
       this.x = width - this.size;
       this.vx *= -0.8;
       this.rotationSpeed = this.vy * 0.05;
       efektler.push(new Efekt(this.x + this.size, this.y + this.size / 2));
+      playBounceSound(this.vx);
     }
   }
 };
-
 Kafa.prototype.draw = function () {
   ctx.save();
   ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
@@ -144,12 +147,10 @@ Kafa.prototype.draw = function () {
 function addKafa() {
   if (kafalar.length < 20) kafalar.push(new Kafa());
 }
-
 document.getElementById('addBtn').addEventListener('click', addKafa);
 
 let draggingKafa = null;
 let lastMouse = { x: 0, y: 0 };
-
 function getMousePos(e) {
   if (e.touches) {
     return { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -157,7 +158,6 @@ function getMousePos(e) {
     return { x: e.clientX, y: e.clientY };
   }
 }
-
 function handleDown(e) {
   const pos = getMousePos(e);
   lastMouse = pos;
@@ -171,13 +171,10 @@ function handleDown(e) {
       k.dragging = true;
       k.offsetX = pos.x - k.x;
       k.offsetY = pos.y - k.y;
-      k.prevX = k.x;
-      k.prevY = k.y;
       break;
     }
   }
 }
-
 function handleMove(e) {
   if (draggingKafa) {
     const pos = getMousePos(e);
@@ -191,14 +188,12 @@ function handleMove(e) {
     lastMouse = pos;
   }
 }
-
 function handleUp() {
   if (draggingKafa) {
     draggingKafa.dragging = false;
     draggingKafa = null;
   }
 }
-
 canvas.addEventListener('mousedown', handleDown);
 canvas.addEventListener('mousemove', handleMove);
 canvas.addEventListener('mouseup', handleUp);
@@ -254,6 +249,5 @@ kafaImg.onload = function () {
   animate();
 };
 </script>
-
 </body>
 </html>
