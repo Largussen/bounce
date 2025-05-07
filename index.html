@@ -67,11 +67,28 @@
       height: 100px;
       cursor: pointer;
       animation: shake 1s infinite alternate;
+      transition: transform 0.3s ease-in-out; /* Büyüme efekti için geçiş ekledik */
     }
 
-    @keyframes shake {
-      0% { transform: rotate(-5deg); }
-      100% { transform: rotate(5deg); }
+    /* Kafaların üzerine gelindiğinde büyüme efekti */
+    .kafa:hover {
+      transform: scale(1.2);
+    }
+
+    /* Kafaların altındaki yazı */
+    .kafa-text {
+      display: none;
+      position: absolute;
+      bottom: -25px;
+      width: 100px;
+      text-align: center;
+      font-size: 14px;
+      color: white;
+      font-weight: bold;
+    }
+
+    .kafa-container .kafa:hover + .kafa-text {
+      display: block; /* Kafa üzerine gelindiğinde yazı görünür */
     }
 
     .mode-buttons {
@@ -113,9 +130,18 @@
   <h1 class="animated-title">Kafa Seç!</h1>
 
   <div class="kafa-container" id="kafaContainer">
-    <img src="kafa1.png" class="kafa" data-id="1">
-    <img src="kafa2.png" class="kafa" data-id="2">
-    <img src="kafa3.png" class="kafa" data-id="3">
+    <div style="position: relative;">
+      <img src="kafa1.png" class="kafa" data-id="1">
+      <div class="kafa-text">En Kafa Benim!</div>
+    </div>
+    <div style="position: relative;">
+      <img src="kafa2.png" class="kafa" data-id="2">
+      <div class="kafa-text">Benim Kafam!</div>
+    </div>
+    <div style="position: relative;">
+      <img src="kafa3.png" class="kafa" data-id="3">
+      <div class="kafa-text">Benim En Kafam!</div>
+    </div>
   </div>
 
   <div class="mode-buttons" id="modeButtons">
