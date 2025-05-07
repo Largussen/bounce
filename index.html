@@ -60,18 +60,17 @@
       top: -100px; /* Kafaların başlangıç yüksekliği */
       width: 80px;
       height: 80px;
-      animation: moveKafalar 5s linear infinite;
+      animation: moveKafalar 10s linear infinite;
       opacity: 0.6;
     }
 
+    /* Rastgele hız ve pozisyonlar için animasyon */
     @keyframes moveKafalar {
       0% {
-        transform: translateX(0);
         top: -100px;
         opacity: 0.6;
       }
       100% {
-        transform: translateX(100vw); /* Sağdan sola kayacak */
         top: 100vh; /* Ekranın altına kadar kayacak */
         opacity: 0;
       }
@@ -94,28 +93,30 @@
     <button onclick="gotoGame('serbest.html')">Serbest Mod</button>
   </div>
 
-  <!-- Arka planda kayan kafalar -->
-  <div class="moving-kafa" style="animation-duration: 4s; animation-delay: 0s;">
-    <img src="kafa1.png" alt="Kafa 1">
-  </div>
-  <div class="moving-kafa" style="animation-duration: 5s; animation-delay: 1s;">
-    <img src="kafa2.png" alt="Kafa 2">
-  </div>
-  <div class="moving-kafa" style="animation-duration: 6s; animation-delay: 2s;">
-    <img src="kafa3.png" alt="Kafa 3">
-  </div>
-  <div class="moving-kafa" style="animation-duration: 4s; animation-delay: 3s;">
-    <img src="kafa1.png" alt="Kafa 1">
-  </div>
-  <div class="moving-kafa" style="animation-duration: 5s; animation-delay: 4s;">
-    <img src="kafa2.png" alt="Kafa 2">
-  </div>
-
   <script>
     const kafalar = document.querySelectorAll('.kafa');
     const kafaContainer = document.getElementById('kafaContainer');
     const modeButtons = document.getElementById('modeButtons');
 
+    // Kafaların arka planda rastgele kayması için fonksiyon
+    function addMovingKafalar() {
+      for (let i = 0; i < 10; i++) { // 10 farklı kafa ekleyelim
+        const randomTop = Math.floor(Math.random() * window.innerHeight); // Yükseklik için rastgele değer
+        const randomDelay = Math.random() * 3 + "s"; // Rastgele animasyon gecikmesi
+        const randomDuration = Math.random() * 5 + 5 + "s"; // Rastgele animasyon süresi
+        
+        const movingKafa = document.createElement('img');
+        movingKafa.src = `kafa${Math.floor(Math.random() * 3) + 1}.png`; // Rastgele kafa seçimi
+        movingKafa.classList.add('moving-kafa');
+        movingKafa.style.top = `${randomTop}px`;
+        movingKafa.style.animationDuration = randomDuration;
+        movingKafa.style.animationDelay = randomDelay;
+        
+        document.body.appendChild(movingKafa);
+      }
+    }
+
+    // Kafa seçim işlemi
     kafalar.forEach(kafa => {
       kafa.addEventListener('click', () => {
         localStorage.setItem('seciliKafa', kafa.getAttribute('data-id'));
@@ -127,6 +128,9 @@
     function gotoGame(page) {
       window.location.href = page;
     }
+
+    // Sayfa yüklendiğinde hareket eden kafaları ekle
+    window.onload = addMovingKafalar;
   </script>
 
 </body>
