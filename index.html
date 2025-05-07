@@ -19,42 +19,6 @@
       position: relative;
     }
 
-    .animated-title {
-      display: flex;
-      gap: 5px;
-      font-size: 64px;
-      font-weight: bold;
-      justify-content: center;
-      margin-bottom: 40px;
-      z-index: 2;
-      animation: bounceText 3s ease-in-out infinite; /* Yeni animasyon */
-    }
-
-    .animated-title span {
-      display: inline-block;
-      animation: bounceColor 5s infinite ease-in-out; /* Renk geçişini yavaşlattık */
-      animation-delay: calc(var(--i) * 0.1s);
-    }
-
-    /* Yazıya ufak bir titreşim animasyonu ekliyoruz */
-    @keyframes bounceText {
-      0% { transform: translateY(0); }
-      25% { transform: translateY(-5px); }
-      50% { transform: translateY(0); }
-      75% { transform: translateY(5px); }
-      100% { transform: translateY(0); }
-    }
-
-    /* Yalnızca renk geçişi olacak */
-    @keyframes bounceColor {
-      0% { color: #ff6347; } /* Tomato Red */
-      20% { color: #ffd700; } /* Gold */
-      40% { color: #40e0d0; } /* Turquoise */
-      60% { color: #8a2be2; } /* Blue Violet */
-      80% { color: #ff69b4; } /* Hot Pink */
-      100% { color: #00fa9a; } /* Medium Spring Green */
-    }
-
     .kafa-container {
       display: flex;
       gap: 20px;
@@ -63,31 +27,38 @@
     }
 
     .kafa {
+      position: relative;
       width: 100px;
       height: 100px;
       cursor: pointer;
       animation: shake 1s infinite alternate;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
+    .kafa:hover {
+      transform: scale(1.2); /* Büyüme */
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.6); /* Hafif parlama efekti */
+    }
+
+    .kafa-text {
+      opacity: 0;
+      position: absolute;
+      top: 120px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      transition: opacity 0.3s ease;
+    }
+
+    .kafa:hover + .kafa-text {
+      opacity: 1; /* Yazıyı görünür yapıyoruz */
+    }
+
+    /* Kafaların hareket animasyonu */
     @keyframes shake {
       0% { transform: rotate(-5deg); }
       100% { transform: rotate(5deg); }
-    }
-
-    .mode-buttons {
-      display: none;
-      flex-direction: column;
-      gap: 20px;
-      z-index: 2;
-    }
-
-    .mode-buttons button {
-      padding: 15px 30px;
-      font-size: 20px;
-      cursor: pointer;
-      background: #fff;
-      border: none;
-      border-radius: 10px;
     }
 
     /* Arka planda kayan kafalar */
@@ -113,9 +84,18 @@
   <h1 class="animated-title">Kafa Seç!</h1>
 
   <div class="kafa-container" id="kafaContainer">
-    <img src="kafa1.png" class="kafa" data-id="1">
-    <img src="kafa2.png" class="kafa" data-id="2">
-    <img src="kafa3.png" class="kafa" data-id="3">
+    <div class="kafa">
+      <img src="kafa1.png" data-id="1">
+      <div class="kafa-text">En Kafa Benim!</div> <!-- Yazı burada -->
+    </div>
+    <div class="kafa">
+      <img src="kafa2.png" data-id="2">
+      <div class="kafa-text">Benimle Gel!</div>
+    </div>
+    <div class="kafa">
+      <img src="kafa3.png" data-id="3">
+      <div class="kafa-text">Kral Kafa</div>
+    </div>
   </div>
 
   <div class="mode-buttons" id="modeButtons">
@@ -127,44 +107,6 @@
     const kafalar = document.querySelectorAll('.kafa');
     const kafaContainer = document.getElementById('kafaContainer');
     const modeButtons = document.getElementById('modeButtons');
-
-    // Başlık harflerine animasyon uygula
-    const title = document.querySelector('.animated-title');
-    const text = title.textContent;
-    title.textContent = '';
-    [...text].forEach((char, index) => {
-      const span = document.createElement('span');
-      span.textContent = char;
-      span.style.setProperty('--i', index);
-      title.appendChild(span);
-    });
-
-    // Arka planda kafaların hareketini ekleyelim
-    function addMovingKafalar() {
-      const numberOfKafalar = 50; // Daha fazla kafa ekleyelim
-      for (let i = 0; i < numberOfKafalar; i++) {
-        const randomTop = Math.floor(Math.random() * -200) - 100;
-        const randomLeft = Math.floor(Math.random() * window.innerWidth);
-        const randomDelay = Math.random() * 2 + "s"; // Yavaşlatılmış gecikme
-        const randomDuration = Math.random() * 4 + 2 + "s"; // Yavaşlatılmış hız
-
-        const movingKafa = document.createElement('img');
-        movingKafa.src = `kafa${Math.floor(Math.random() * 3) + 1}.png`;
-        movingKafa.classList.add('moving-kafa');
-        movingKafa.style.top = `${randomTop}px`;
-        movingKafa.style.left = `${randomLeft}px`;
-        movingKafa.style.animationDuration = randomDuration;
-        movingKafa.style.animationDelay = randomDelay;
-
-        document.body.appendChild(movingKafa);
-      }
-    }
-
-    // Kafaların dönme animasyonlarını farklılaştır
-    kafalar.forEach((kafa, index) => {
-      const randomDuration = Math.random() * 1 + 1 + "s"; // Farklı dönme süreleri
-      kafa.style.animation = `shake ${randomDuration} infinite alternate`;
-    });
 
     // Kafa seçim işlemi
     kafalar.forEach(kafa => {
@@ -178,9 +120,6 @@
     function gotoGame(page) {
       window.location.href = page;
     }
-
-    // Sayfa yüklendiğinde hareket eden kafaları ekle
-    window.onload = addMovingKafalar;
   </script>
 
 </body>
