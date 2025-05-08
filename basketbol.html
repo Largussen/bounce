@@ -150,21 +150,28 @@
     }
   }
 
-  function checkBasket() {
-    const dx = kafa.x - pota.x;
-    const dy = kafa.y - pota.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    if (distance < pota.radius - kafa.radius / 2) {
-      score++;
-      if (score > highScore) {
-        highScore = score;
-        localStorage.setItem("highScore", highScore);
-      }
-      resetKafa();
-      if (score >= 15) movePota(); else randomizePota();
-      resetTimer();
+function checkBasket() {
+  const dx = kafa.x - pota.x;
+  const dy = kafa.y - pota.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  if (distance < pota.radius - kafa.radius / 2) {
+    score++;
+    if (score > highScore) {
+      highScore = score;
+      localStorage.setItem("highScore", highScore);
     }
+    resetKafa();
+    
+    
+    if (score >= 10) {
+      movePota();
+    } else {
+      randomizePota();
+    }
+    resetTimer();
   }
+}
+
 
   function resetKafa() {
     kafa.x = canvas.width / 2;
