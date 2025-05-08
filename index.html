@@ -72,22 +72,20 @@
       height: 100px;
       cursor: pointer;
       animation: rotateKafa 2s infinite ease-in-out;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease-in-out;
+      --scale: 1;
+      --rotate-angle: 0deg;
+      transform: scale(var(--scale)) rotate(var(--rotate-angle));
     }
 
     .kafa:hover {
-  transform: scale(1.3);
-  animation: none;
-}
-
+      --scale: 1.2;
     }
 
     @keyframes rotateKafa {
-      0% { transform: rotate(-8deg); }
-      25% { transform: rotate(-4deg); }
-      50% { transform: rotate(8deg); }
-      75% { transform: rotate(4deg); }
-      100% { transform: rotate(-8deg); }
+      0%   { --rotate-angle: -8deg; }
+      50%  { --rotate-angle: 8deg; }
+      100% { --rotate-angle: -8deg; }
     }
 
     .kafa-text {
