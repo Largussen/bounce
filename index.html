@@ -100,6 +100,12 @@
       display: block;
     }
 
+    /* Sadece kafa3 ve kafa4 için aşağı kaydırma */
+    .kafa-text.kafa3,
+    .kafa-text.kafa4 {
+      bottom: -30px;
+    }
+
     .mode-buttons {
       display: none;
       flex-direction: column;
@@ -146,11 +152,11 @@
     </div>
     <div class="kafa-wrapper">
       <img src="kafa3.png" class="kafa" data-id="3">
-      <div class="kafa-text">Hayır, en kocaman benimki!</div>
+      <div class="kafa-text kafa3">Hayır, en kocaman benimki!</div>
     </div>
     <div class="kafa-wrapper">
       <img src="kafa4.png" class="kafa" data-id="4">
-      <div class="kafa-text">Diğer kulağımı kaybettim!</div>
+      <div class="kafa-text kafa4">Diğer kulağımı kaybettim!</div>
     </div>
   </div>
 
@@ -194,24 +200,22 @@
       }
     }
 
-   kafalar.forEach(kafa => {
-  kafa.addEventListener('click', () => {
-    localStorage.setItem('seciliKafa', kafa.getAttribute('data-id'));
-    kafaContainer.style.display = 'none';
-    modeButtons.style.display = 'flex';
+    kafalar.forEach(kafa => {
+      kafa.addEventListener('click', () => {
+        localStorage.setItem('seciliKafa', kafa.getAttribute('data-id'));
+        kafaContainer.style.display = 'none';
+        modeButtons.style.display = 'flex';
 
-   const newText = 'Oyun Seç!';
-title.textContent = '';
-[...newText].forEach((char, index) => {
-  const span = document.createElement('span');
-  span.textContent = char;
-  span.style.setProperty('--i', index);
-  title.appendChild(span);
-});
-
-  });
-});
-
+        const newText = 'Oyun Seç!';
+        title.textContent = '';
+        [...newText].forEach((char, index) => {
+          const span = document.createElement('span');
+          span.textContent = char;
+          span.style.setProperty('--i', index);
+          title.appendChild(span);
+        });
+      });
+    });
 
     function gotoGame(page) {
       window.location.href = page;
