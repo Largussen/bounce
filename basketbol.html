@@ -167,7 +167,7 @@
 
   function resetTimer() {
     clearInterval(timerInterval);
-    let newTime = Math.max(10 - score * 0.5, 2);
+    let newTime = Math.max(10 - score * 0.2, 2);
     remainingTime = newTime;
     timerInterval = setInterval(() => {
       remainingTime -= 0.1;
