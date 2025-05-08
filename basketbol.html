@@ -85,7 +85,7 @@
  function drawZemin() {
   if (backgroundImage.complete) {
     ctx.save();
-    ctx.globalAlpha = 0.2; // Burayı ihtiyacına göre azaltabilirsin (0.1 - 0.5 arası idealdir)
+    ctx.globalAlpha = 0.2; // Arka plan opaklığı
     ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
     ctx.restore();
   } else {
@@ -93,16 +93,14 @@
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  // Zemin katmanı
+  // Zemin katmanı (alt siyah şerit)
   ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
   ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
 }
 
 
-    // Zemin katmanı
-    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-    ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
-  }
+
+   
 
   function drawTrajectory() {
     ctx.fillStyle = "rgba(255,255,255,0.5)";
