@@ -194,13 +194,17 @@
       }
     }
 
-    kafalar.forEach(kafa => {
-      kafa.addEventListener('click', () => {
-        localStorage.setItem('seciliKafa', kafa.getAttribute('data-id'));
-        kafaContainer.style.display = 'none';
-        modeButtons.style.display = 'flex';
-      });
-    });
+   kafalar.forEach(kafa => {
+  kafa.addEventListener('click', () => {
+    localStorage.setItem('seciliKafa', kafa.getAttribute('data-id'));
+    kafaContainer.style.display = 'none';
+    modeButtons.style.display = 'flex';
+
+    // Başlığı "Oyun Seç!" olarak değiştir
+    title.textContent = 'Oyun Seç!';
+  });
+});
+
 
     function gotoGame(page) {
       window.location.href = page;
