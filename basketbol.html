@@ -188,7 +188,7 @@
   }
 
   function movePota() {
-    if (score >= 15) {
+    if (score >= 10) {
       pota.x += potaSpeed;
       if (pota.x + pota.radius > canvas.width || pota.x - pota.radius < 0) {
         potaSpeed *= -1;
