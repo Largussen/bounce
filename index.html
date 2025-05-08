@@ -200,8 +200,15 @@
     kafaContainer.style.display = 'none';
     modeButtons.style.display = 'flex';
 
-    // Başlığı "Oyun Seç!" olarak değiştir
-    title.textContent = 'Oyun Seç!';
+   const newText = 'Oyun Seç!';
+title.textContent = '';
+[...newText].forEach((char, index) => {
+  const span = document.createElement('span');
+  span.textContent = char;
+  span.style.setProperty('--i', index);
+  title.appendChild(span);
+});
+
   });
 });
 
