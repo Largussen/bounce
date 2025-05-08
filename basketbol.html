@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Hedefi Vur</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
   <style>
     * {
       margin: 0;
@@ -82,25 +82,22 @@
     }
   }
 
- function drawZemin() {
-  if (backgroundImage.complete) {
-    ctx.save();
-    ctx.globalAlpha = 0.2; // Arka plan opaklığı
-    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-    ctx.restore();
-  } else {
-    ctx.fillStyle = "#444";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  function drawZemin() {
+    if (backgroundImage.complete) {
+      ctx.save();
+      // Arka planı canvas boyutlarına uyumlu hale getirmek için
+      ctx.globalAlpha = 0.2; // Arka plan opaklığı
+      ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = "#444";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Zemin katmanı (alt siyah şerit)
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
   }
-
-  // Zemin katmanı (alt siyah şerit)
-  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-  ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
-}
-
-
-
-   
 
   function drawTrajectory() {
     ctx.fillStyle = "rgba(255,255,255,0.5)";
