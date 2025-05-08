@@ -100,6 +100,12 @@
       display: block;
     }
 
+    /* Yeni eklenen stil */
+    .kafa-wrapper:nth-child(3) .kafa-text,
+    .kafa-wrapper:nth-child(4) .kafa-text {
+      bottom: -35px; /* Yazıları daha aşağı almak için */
+    }
+
     .mode-buttons {
       display: none;
       flex-direction: column;
@@ -194,24 +200,23 @@
       }
     }
 
-   kafalar.forEach(kafa => {
-  kafa.addEventListener('click', () => {
-    localStorage.setItem('seciliKafa', kafa.getAttribute('data-id'));
-    kafaContainer.style.display = 'none';
-    modeButtons.style.display = 'flex';
+    kafalar.forEach(kafa => {
+      kafa.addEventListener('click', () => {
+        localStorage.setItem('seciliKafa', kafa.getAttribute('data-id'));
+        kafaContainer.style.display = 'none';
+        modeButtons.style.display = 'flex';
 
-   const newText = 'Oyun Seç!';
-title.textContent = '';
-[...newText].forEach((char, index) => {
-  const span = document.createElement('span');
-  span.textContent = char;
-  span.style.setProperty('--i', index);
-  title.appendChild(span);
-});
+        const newText = 'Oyun Seç!';
+        title.textContent = '';
+        [...newText].forEach((char, index) => {
+          const span = document.createElement('span');
+          span.textContent = char;
+          span.style.setProperty('--i', index);
+          title.appendChild(span);
+        });
 
-  });
-});
-
+      });
+    });
 
     function gotoGame(page) {
       window.location.href = page;
