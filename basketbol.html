@@ -85,8 +85,7 @@
   function drawZemin() {
     if (backgroundImage.complete) {
       ctx.save();
-      // Arka planı canvas boyutlarına uyumlu hale getirmek için
-      ctx.globalAlpha = 0.2; // Arka plan opaklığı
+      ctx.globalAlpha = 0.2;
       ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
       ctx.restore();
     } else {
@@ -94,7 +93,6 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Zemin katmanı (alt siyah şerit)
     ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
     ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
   }
@@ -150,28 +148,25 @@
     }
   }
 
-function checkBasket() {
-  const dx = kafa.x - pota.x;
-  const dy = kafa.y - pota.y;
-  const distance = Math.sqrt(dx * dx + dy * dy);
-  if (distance < pota.radius - kafa.radius / 2) {
-    score++;
-    if (score > highScore) {
-      highScore = score;
-      localStorage.setItem("highScore", highScore);
+  function checkBasket() {
+    const dx = kafa.x - pota.x;
+    const dy = kafa.y - pota.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance < pota.radius - kafa.radius / 2) {
+      score++;
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("highScore", highScore);
+      }
+      resetKafa();
+      if (score >= 10) {
+        movePota();
+      } else {
+        randomizePota();
+      }
+      resetTimer();
     }
-    resetKafa();
-    
-    
-    if (score >= 10) {
-      movePota();
-    } else {
-      randomizePota();
-    }
-    resetTimer();
   }
-}
-
 
   function resetKafa() {
     kafa.x = canvas.width / 2;
@@ -189,14 +184,13 @@ function checkBasket() {
     pota.x += (Math.random() - 0.5) * 200;
     pota.y += (Math.random() - 0.5) * 150;
 
-    // Sınırları aşmasın
     pota.x = Math.max(50, Math.min(canvas.width - 50, pota.x));
     pota.y = Math.max(50, Math.min(canvas.height / 2, pota.y));
   }
 
   function resetTimer() {
     clearInterval(timerInterval);
-    let newTime = Math.max(10 - score * 0.2, 2); // Süre azalışı 0.2 oldu
+    let newTime = Math.max(10 - score * 0.2, 2);
     remainingTime = newTime;
     timerInterval = setInterval(() => {
       remainingTime -= 0.1;
@@ -219,6 +213,7 @@ function checkBasket() {
   function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawZemin();
+
     if (gameOver) {
       drawGameOver();
     } else {
@@ -244,6 +239,12 @@ function checkBasket() {
         }
 
         checkBasket();
+      }
+
+      if (score >= 10) {
+        movePota();
+      } else {
+        randomizePota();
       }
 
       drawPota();
