@@ -55,12 +55,12 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// Kafa resimlerini bir diziye ekle
+
 const kafaResimleri = [
   'kafa1.png', // Kafa 1
   'kafa2.png', // Kafa 2
   'kafa3.png', // Kafa 3
-  // Buraya daha fazla kafa ekleyebilirsin
+
 ];
 
 const kafaImages = kafaResimleri.map(src => {
@@ -141,16 +141,16 @@ function Kafa() {
   this.rotationSpeed = 0;
   this.prevX = 0;
   this.prevY = 0;
-  // Rastgele kafa seçimi, ancak önceki kafa resmini seçmiyoruz
+  
   let randomIndex;
   do {
     randomIndex = Math.floor(Math.random() * kafaImages.length);
-  } while (randomIndex === Kafa.lastIndex); // Son eklenen kafa ile aynı olmasın
+  } while (randomIndex === Kafa.lastIndex); 
   this.img = kafaImages[randomIndex];
-  Kafa.lastIndex = randomIndex; // Son eklenen kafa index'ini sakla
+  Kafa.lastIndex = randomIndex; 
 }
 
-Kafa.lastIndex = -1; // Başlangıçta hiçbir kafa eklenmemiş kabul edilir
+Kafa.lastIndex = -1; 
 
 Kafa.prototype.update = function () {
   if (!this.dragging) {
